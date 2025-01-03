@@ -7,6 +7,7 @@ import healthRouter from './router/healthCheck'
 import helmet from 'helmet'
 import cors from 'cors'
 import config from './config/config'
+import rateLimit from './middleware/rateLimit'
 
 const app: Application = express()
 
@@ -21,6 +22,7 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, '../', 'public')))
 
 // Routes
+app.use(rateLimit)
 app.use('/api/v1/health', healthRouter)
 
 // 404 hander

@@ -1,5 +1,6 @@
 import app from './app'
 import config from './config/config'
+import { DURATION, initRateLimiter, POINTS } from './config/rateLimiter';
 import databaseService from './service/databaseService'
 import logger from './utils/logger'
 
@@ -12,6 +13,14 @@ const server = app.listen(config.PORT)
         logger.info(`DATABASE_CONNECTION`, {
             meta: {
                 connectionName: connection.name
+            }
+        })
+
+        initRateLimiter(connection)
+        logger.info(`RATE_LIMITER_INITIALIZED`, {
+            meta: {
+                duration: DURATION,
+                points: POINTS
             }
         })
 
