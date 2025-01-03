@@ -7,22 +7,37 @@ import path from 'path'
 
 // Linking Trace Support
 import * as sourceMapSupport from 'source-map-support'
+import { red, blue, yellow, green, magenta } from 'colorette'
 sourceMapSupport.install()
+
+const colorizeLevel = (level: string) => {
+    switch (level) {
+        case 'ERROR':
+            return red(level)
+        case 'INFO':
+            return blue(level)
+        case 'WARN':
+            return yellow(level)
+        default: 
+            return level
+    }
+}
 
 const ConsoleLogFormat = format.printf((info) => {
     const { level, message, timestamp, meta = {} } = info
 
-    const customeLevel = level.toUpperCase()
-    const customTimeStamp = timestamp as string
+    const customeLevel = colorizeLevel(level.toUpperCase())
+    const customTimeStamp = green(timestamp as string)
     const customMessage = message
 
     const customeMeta = util.inspect(meta, {
         showHidden: false,
-        depth: null
+        depth: null,
+        colors: true
     })
 
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    const customeLog = `${customeLevel} [${customTimeStamp}] ${customMessage}\n${'META'} ${customeMeta}\n`
+    const customeLog = `${customeLevel} [${customTimeStamp}] ${customMessage}\n${magenta('META')} ${customeMeta}\n`
 
     return customeLog
 })
