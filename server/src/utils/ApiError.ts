@@ -1,6 +1,7 @@
 import { NextFunction, Request } from 'express'
 import { THttpError } from '../types/types'
 import responseMessage from '../constants/responseMessage'
+import logger from './logger'
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export default (nextFunc: NextFunction, err: Error | unknown, req: Request, errorStatusCode: number = 500): void => {
@@ -16,8 +17,7 @@ export default (nextFunc: NextFunction, err: Error | unknown, req: Request, erro
         trace: err instanceof Error ? { error: err.stack } : null
     }
 
-    // eslint-disable-next-line no-console
-    console.error(`CONTROLLER_ERROR`, {
+    logger.error(`CONTROLLER_ERROR`, {
         meta: errorObj
     })
 
