@@ -5,11 +5,18 @@ import responseMessage from './constants/responseMessage'
 import ApiError from './utils/ApiError'
 import healthRouter from './router/healthCheck'
 import helmet from 'helmet'
+import cors from 'cors'
+import config from './config/config'
 
 const app: Application = express()
 
 //Middlewares
 app.use(helmet())
+app.use(cors({
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+    origin: [config.CLIENT_URL as string],
+    credentials: true
+}))
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '../', 'public')))
 
