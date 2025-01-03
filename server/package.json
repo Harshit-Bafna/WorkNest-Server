@@ -5,7 +5,9 @@
   "scripts": {
     "dist": "npx tsc",
     "dev": "cross-env NODE_ENV=development nodemon src/server.ts",
-    "start": "cross-env NODE_ENV=production node dist/server.js"
+    "start": "cross-env NODE_ENV=production node dist/server.js",
+    "migrate:dev": "cross-env MIGRATE_MODE=development node script/migration.js",
+    "migrate:prod": "cross-env MIGRATE_MODE=production node script/migration.js"
   },
   "author": "Harshit Bafna",
   "license": "ISC",
@@ -25,6 +27,7 @@
     "express": "^4.21.2",
     "mongoose": "^8.9.3",
     "source-map-support": "^0.5.21",
+    "ts-migrate-mongoose": "^3.8.7",
     "winston": "^3.17.0",
     "winston-mongodb": "^6.0.0"
   }
