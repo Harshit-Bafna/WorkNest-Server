@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "test": "node test.js"
+  }
+}
