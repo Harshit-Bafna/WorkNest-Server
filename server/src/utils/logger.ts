@@ -1,6 +1,7 @@
 import { createLogger, format, transports } from 'winston'
 import { ConsoleTransportInstance, FileTransportInstance } from 'winston/lib/winston/transports'
 import util from 'util'
+import 'winston-mongodb'
 import { EApplicationEnvironment } from '../constants/application'
 import config from '../config/config'
 import path from 'path'
@@ -8,6 +9,7 @@ import path from 'path'
 // Linking Trace Support
 import * as sourceMapSupport from 'source-map-support'
 import { red, blue, yellow, green, magenta } from 'colorette'
+import { MongoDBTransportInstance } from 'winston-mongodb'
 sourceMapSupport.install()
 
 const colorizeLevel = (level: string) => {
@@ -18,7 +20,7 @@ const colorizeLevel = (level: string) => {
             return blue(level)
         case 'WARN':
             return yellow(level)
-        default: 
+        default:
             return level
     }
 }
@@ -91,9 +93,21 @@ const FileTransport = (): Array<FileTransportInstance> => {
     ]
 }
 
+const MongoDBTransport = (): Array<MongoDBTransportInstance> => {
+    return [
+        new transports.MongoDB({
+            level: 'info',
+            db: config.DATABASE_URL as string,
+            metaKey: 'meta',
+            expireAfterSeconds: 3600 * 24 * 30,
+            collection: 'application-logs'
+        })
+    ]
+}
+
 export default createLogger({
     defaultMeta: {
         meta: {}
     },
-    transports: [...FileTransport(), ...consoleTransport()]
+    transports: [...FileTransport(),...MongoDBTransport(), ...consoleTransport()]
 })
