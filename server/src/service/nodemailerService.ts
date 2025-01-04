@@ -1,6 +1,6 @@
- 
- 
- 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */ 
 import nodemailer from 'nodemailer'
 import config from '../config/config'
 
@@ -37,7 +37,7 @@ export const sendEmail = async (to: string[], subject: string, html: string, att
             attachments: attatchments
         })
 
-         
+         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return info
     } catch (error) {
         throw new Error(`Error sending email: ${error as string}`)
