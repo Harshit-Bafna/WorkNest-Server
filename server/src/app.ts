@@ -3,11 +3,14 @@ import path from 'path'
 import globalErrorHandler from './middleware/globalErrorHandler'
 import responseMessage from './constants/responseMessage'
 import ApiError from './utils/ApiError'
-import healthRouter from './router/healthCheck'
 import helmet from 'helmet'
 import cors from 'cors'
 import config from './config/config'
+
 import rateLimit from './middleware/rateLimit'
+
+import healthRouter from './router/healthCheck'
+import awsRouter from './router/s3FileHandler'
 
 const app: Application = express()
 
@@ -24,6 +27,7 @@ app.use(express.static(path.join(__dirname, '../', 'public')))
 // Routes
 app.use(rateLimit)
 app.use('/api/v1/health', healthRouter)
+app.use('/api/v1/s3', awsRouter)
 
 // 404 hander
 app.use((req: Request, _: Response, next: NextFunction) => {
