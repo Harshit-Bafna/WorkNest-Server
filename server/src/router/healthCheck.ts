@@ -7,9 +7,12 @@ const router = Router()
 router.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
         const healthData = getHealth()
-        ApiResponse(req, res, healthData.status, healthData.message, healthData.data)
+        if (!healthData.success) {
+            return ApiError(next, healthData.message, req, healthData.status)
+        }
+        return ApiResponse(req, res, healthData.status, healthData.message, healthData.data)
     } catch (err) {
-        ApiError(next, err, req, 500)
+        return ApiError(next, err, req, 500)
     }
 })
 
