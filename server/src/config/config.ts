@@ -13,5 +13,12 @@ export default {
     BUCKET_NAME: process.env.BUCKET_NAME,
     BUCKET_REGION: process.env.BUCKET_REGION,
     ACCESS_KEY: process.env.ACCESS_KEY,
-    SECRET_ACCESS_KEY: process.env.SECRET_ACCESS_KEY
+    SECRET_ACCESS_KEY: process.env.SECRET_ACCESS_KEY,
+
+    SENDER_HOST: process.env.SENDER_HOST,
+    SENDER_PORT: process.env.SENDER_PORT,
+    IS_SENDER_SECURE: process.env.IS_SENDER_SECURE,
+    SENDER_NAME: process.env.SENDER_NAME,
+    SENDER_EMAIL: process.env.SENDER_EMAIL,
+    SENDER_EMAIL_PASSWORD: process.env.SENDER_EMAIL_PASSWORD
 }
