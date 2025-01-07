@@ -4,7 +4,7 @@ import responseMessage from '../constants/responseMessage'
 import logger from './logger'
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-export default (nextFunc: NextFunction, err: Error | unknown, req: Request, errorStatusCode: number = 500, errMessage: string = responseMessage.SOMETHING_WENT_WRONG): void => {
+export default (nextFunc: NextFunction, err: Error | unknown = null, req: Request, errorStatusCode: number = 500, errMessage: string = responseMessage.SOMETHING_WENT_WRONG): void => {
     const errorObj: THttpError = {
         success: false,
         statusCode: errorStatusCode,
