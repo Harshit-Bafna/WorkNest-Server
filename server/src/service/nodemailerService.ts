@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */ 
 import nodemailer from 'nodemailer'
 import config from '../config/config'
+import logger from '../utils/logger'
 
 const senderName: string = config.SENDER_NAME || 'Sender Name'
 const senderHost: string = config.SENDER_HOST || 'smtp.gmail.com'
@@ -27,8 +25,8 @@ interface EmailAttachment {
     cid?: string | undefined
 }
 
-export const sendEmail = async (to: string[], subject: string, html: string, attatchments:EmailAttachment[] = [] ) => {
-    try {        
+export const sendEmail = async (to: string[], subject: string, html: string, attatchments: EmailAttachment[] = []) => {
+    try {
         const info = await transporter.sendMail({
             from: `"${senderName}" <${senderEmail}>`,
             to: to,
@@ -37,9 +35,11 @@ export const sendEmail = async (to: string[], subject: string, html: string, att
             attachments: attatchments
         })
 
-         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return info
     } catch (error) {
+        logger.error('EMAIL_SERVICE', {
+            meta: error
+        })
         throw new Error(`Error sending email: ${error as string}`)
     }
 }
