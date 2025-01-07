@@ -50,7 +50,7 @@ export const RegisterUser = async (input: UserRegistrationDTO): Promise<ApiMessa
 
         const newUser = await userModel.create(payload)
 
-        const confirmationUrl = `${config.CLIENT_URL}/confirmation/${token}?code=${code}`
+        const confirmationUrl = `${config.SERVER_URL}/confirmation/${token}?code=${code}`
         const to = [emailAddress]
         const subject = 'Confirm Your Account'
         const HTML = emailVerificationTemplate(confirmationUrl)
