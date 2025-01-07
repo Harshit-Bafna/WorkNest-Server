@@ -10,5 +10,7 @@ export default {
     PASSWORD_ENCRYPTION_ERROR: 'An unknown error occurred while encrypting the password',
     ERROR_FETCHING: (entity: string, identifier: string) => {
         return `Error while fetching ${entity} with ${identifier}`
-    }
+    },
+    INVALID_CONFIRMATION_LINK: 'Invalid confirmation token or code',
+    ACCOUNT_ALREADY_CONFIRMED: 'Account already confirmed'
 }
