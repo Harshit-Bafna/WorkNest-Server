@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import config from '../config/config'
-import { EApplicationEnvironment } from '../constants/application'
+import { EApplicationEnvironment } from '../constants/applicationEnums'
 import { rateLimiterMongo } from '../config/rateLimiter'
 import ApiError from '../utils/ApiError'
 import responseMessage from '../constants/responseMessage'

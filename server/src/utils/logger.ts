@@ -2,7 +2,7 @@ import { createLogger, format, transports } from 'winston'
 import { ConsoleTransportInstance, FileTransportInstance } from 'winston/lib/winston/transports'
 import util from 'util'
 import 'winston-mongodb'
-import { EApplicationEnvironment } from '../constants/application'
+import { EApplicationEnvironment } from '../constants/applicationEnums'
 import config from '../config/config'
 import path from 'path'
 
