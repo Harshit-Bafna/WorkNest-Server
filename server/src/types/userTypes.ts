@@ -19,3 +19,7 @@ export interface IUser {
     lastLoginAt: Date | null
     consent: boolean
 }
+
+export interface IRefreshToken {
+    token: string
+}

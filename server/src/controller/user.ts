@@ -1,14 +1,16 @@
 import config from '../config/config'
+import { UserLoginDTO } from '../constants/DTO/User/UserLoginDTO'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import responseMessage from '../constants/responseMessage'
 import { emailVerificationTemplate } from '../constants/template/emailVerificationTemplate'
 import { verificationSuccessfullTemplate } from '../constants/template/verificationSuccessfullTemplate'
-import userModel from '../model/userModel'
+import refreshTokenModel from '../model/user/refreshTokenModel'
+import userModel from '../model/user/userModel'
 import { sendEmail } from '../service/nodemailerService'
-import { IUser } from '../types/userTypes'
+import { IRefreshToken, IUser } from '../types/userTypes'
 import { ApiMessage } from '../utils/ApiMessage'
-import { EncryptPassword, FindUserByEmail } from '../utils/helper/asyncHelpers'
-import { GenerateOTP, GenerateRandomId } from '../utils/helper/syncHelpers'
+import { EncryptPassword, FindUserByEmail, VerifyPassword } from '../utils/helper/asyncHelpers'
+import { GenerateJwtToken, GenerateOTP, GenerateRandomId } from '../utils/helper/syncHelpers'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 
@@ -114,6 +116,80 @@ export const VerifyAccount = async (token: string, code: string): Promise<ApiMes
             status: 200,
             message: 'Email verified',
             data: null
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
+    const { emailAddress, password } = input
+    try {
+        const user = await FindUserByEmail(emailAddress, `+password`)
+        if (!user) {
+            return {
+                success: false,
+                status: 422,
+                message: responseMessage.NOT_FOUND('user'),
+                data: null
+            }
+        }
+        const isPasswordCorrect = await VerifyPassword(password, user.password)
+        if (!isPasswordCorrect) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.INVALID_LOGIN_CREDENTIALS,
+                data: null
+            }
+        }
+
+        const accessToken = GenerateJwtToken(
+            {
+                userId: user.id as string,
+                role: user.role
+            },
+            config.ACCESS_TOKEN.SECRET as string,
+            config.ACCESS_TOKEN.EXPIRY
+        )
+
+        const refreshToken = GenerateJwtToken(
+            {
+                userId: user.id as string,
+                role: user.role
+            },
+            config.REFRESH_TOKEN.SECRET as string,
+            config.REFRESH_TOKEN.EXPIRY
+        )
+
+        user.lastLoginAt = dayjs().utc().toDate()
+        await user.save()
+
+        const payload: IRefreshToken = {
+            token: accessToken
+        }
+
+        await refreshTokenModel.create(payload)
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.LOGIN,
+            data: {
+                user: {
+                    id: user.id as string,
+                    name: user.name,
+                    emailAddress: user.emailAddress
+                },
+                accessToken: accessToken,
+                refreshToken: refreshToken
+            }
         }
     } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR

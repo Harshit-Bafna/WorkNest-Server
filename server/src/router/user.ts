@@ -1,10 +1,13 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { RegisterUser, VerifyAccount } from '../controller/user'
+import { LoginUser, RegisterUser, VerifyAccount } from '../controller/user'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
+import { UserLoginDTO } from '../constants/DTO/User/UserLoginDTO'
+import config from '../config/config'
+import { EApplicationEnvironment } from '../constants/applicationEnums'
 const router = Router()
 
 /*
@@ -34,6 +37,57 @@ router.post('/create', async (req: Request, res: Response, next: NextFunction) =
 })
 
 /*
+    Route: /api/v1/user/login
+    Method: POST
+    Desc: Login a user
+    Access: Public
+    Body: UserRegistrationDTO
+*/
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const body: object = req.body as object
+
+        const requestValidation = await validateDTO(UserLoginDTO, body)
+        if (!requestValidation.success) {
+            return DtoError(next, req, requestValidation.status, requestValidation.errors)
+        }
+
+        const userDetails = await LoginUser(req.body as UserLoginDTO)
+        if (!userDetails.success) {
+            return ApiError(next, null, req, userDetails.status, userDetails.message)
+        }
+
+        let DOMAIN = ''
+        try {
+            const url = new URL(config.SERVER_URL as string)
+            DOMAIN = url.hostname
+        } catch (error) {
+            throw error
+        }
+
+        const accessToken = (userDetails.data as { accessToken: string }).accessToken;
+        const refreshToken = (userDetails.data as { refreshToken: string }).refreshToken;
+
+        res.cookie('accessToken', accessToken, {
+            path: 'api/v1',
+            domain: DOMAIN,
+            sameSite: 'strict',
+            maxAge: 1000 * config.ACCESS_TOKEN.EXPIRY,
+            secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+        }).cookie('refreshToken', refreshToken, {
+            path: 'api/v1',
+            domain: DOMAIN,
+            sameSite: 'strict',
+            maxAge: 1000 * config.REFRESH_TOKEN.EXPIRY,
+            secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+        })
+        return ApiResponse(req, res, userDetails.status, userDetails.message, userDetails.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
     Route: /api/v1/user/confirmation/:token
     Method: POST
     Desc: Verify user email
@@ -53,12 +107,12 @@ router.put('/confirmation/:token', async (req: Request, res: Response, next: Nex
             return ApiError(next, 'Code is required', req, 404)
         }
 
-        const createUser = await VerifyAccount(token, code)
-        
-        if (!createUser.success) {
-            return ApiError(next, null, req, createUser.status, createUser.message)
+        const verifyUser = await VerifyAccount(token, code)
+
+        if (!verifyUser.success) {
+            return ApiError(next, null, req, verifyUser.status, verifyUser.message)
         }
-        return ApiResponse(req, res, createUser.status, createUser.message, createUser.data)
+        return ApiResponse(req, res, verifyUser.status, verifyUser.message, verifyUser.data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }

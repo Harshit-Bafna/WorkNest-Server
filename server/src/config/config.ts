@@ -20,5 +20,15 @@ export default {
     IS_SENDER_SECURE: process.env.IS_SENDER_SECURE,
     SENDER_NAME: process.env.SENDER_NAME,
     SENDER_EMAIL: process.env.SENDER_EMAIL,
-    SENDER_EMAIL_PASSWORD: process.env.SENDER_EMAIL_PASSWORD
+    SENDER_EMAIL_PASSWORD: process.env.SENDER_EMAIL_PASSWORD,
+
+    ACCESS_TOKEN: {
+        SECRET: process.env.ACCESS_TOKEN_SECRET,
+        EXPIRY: 3600
+    },
+
+    REFRESH_TOKEN: {
+        SECRET: process.env.REFRESH_TOKEN_SECRET,
+        EXPIRY: 3600 * 24
+    }
 }
