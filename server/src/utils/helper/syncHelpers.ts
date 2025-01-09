@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
 import { emailRegex } from '../../constants/regex'
 import { randomInt } from 'crypto'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 
 export const VerifyEmail = (email: string): boolean => {
     return emailRegex.test(email)
@@ -20,4 +20,8 @@ export const GenerateJwtToken = (payload: object, secret: string, expiry: number
     return jwt.sign(payload, secret, {
         expiresIn: expiry
     })
+}
+
+export const VerifyToken = (token: string, secret: string): string | JwtPayload => {
+    return jwt.verify(token, secret)
 }

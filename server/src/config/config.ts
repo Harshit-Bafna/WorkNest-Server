@@ -24,11 +24,11 @@ export default {
 
     ACCESS_TOKEN: {
         SECRET: process.env.ACCESS_TOKEN_SECRET,
-        EXPIRY: 3600
+        EXPIRY: 60 * 60
     },
 
     REFRESH_TOKEN: {
         SECRET: process.env.REFRESH_TOKEN_SECRET,
-        EXPIRY: 3600 * 24
+        EXPIRY: 60 * 60 * 24
     }
 }

@@ -1,4 +1,6 @@
+import { Request } from 'express'
 import { EUserRole } from '../constants/applicationEnums'
+import { JwtPayload } from 'jsonwebtoken'
 
 export interface IUser {
     name: string
@@ -22,4 +24,13 @@ export interface IUser {
 
 export interface IRefreshToken {
     token: string
+}
+
+export interface IAuthenticatedRequest extends Request {
+    authenticatedUser: IUser
+}
+
+export interface IDecryptedJwt extends JwtPayload {
+    userId: string
+    role: string
 }

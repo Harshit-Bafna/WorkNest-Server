@@ -6,17 +6,20 @@ import ApiError from './utils/ApiError'
 import helmet from 'helmet'
 import cors from 'cors'
 import config from './config/config'
+import cookieParser from 'cookie-parser'
 
 import rateLimit from './middleware/rateLimit'
 
 import healthRouter from './router/healthCheck'
 import awsRouter from './router/s3FileHandler'
 import userRouter from './router/user'
+import authentication from './middleware/authentication'
 
 const app: Application = express()
 
 //Middlewares
 app.use(helmet())
+app.use(cookieParser())
 app.use(
     cors({
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
@@ -27,11 +30,14 @@ app.use(
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '../', 'public')))
 
-// Routes
+// Open Routes
 app.use(rateLimit)
+app.use('/api/v1/user', userRouter)
+
+// Restricted Routes
+app.use(authentication)
 app.use('/api/v1/health', healthRouter)
 app.use('/api/v1/s3', awsRouter)
-app.use('/api/v1/user', userRouter)
 
 // 404 hander
 app.use((req: Request, _: Response, next: NextFunction) => {

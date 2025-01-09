@@ -15,5 +15,6 @@ export default {
     INVALID_CONFIRMATION_LINK: 'Invalid confirmation token or code',
     ACCOUNT_ALREADY_CONFIRMED: 'Account already confirmed',
     LOGIN: 'User logged in successfully',
-    INVALID_LOGIN_CREDENTIALS: 'Invalid credentials'
+    INVALID_LOGIN_CREDENTIALS: 'Invalid credentials',
+    UNAUTHORIZED: 'You are not authorized to perform this action'
 }

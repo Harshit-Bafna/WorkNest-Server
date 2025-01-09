@@ -65,17 +65,17 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
             throw error
         }
 
-        const accessToken = (userDetails.data as { accessToken: string }).accessToken;
-        const refreshToken = (userDetails.data as { refreshToken: string }).refreshToken;
+        const accessToken = (userDetails.data as { accessToken: string }).accessToken
+        const refreshToken = (userDetails.data as { refreshToken: string }).refreshToken
 
         res.cookie('accessToken', accessToken, {
-            path: 'api/v1',
+            path: '/',
             domain: DOMAIN,
             sameSite: 'strict',
             maxAge: 1000 * config.ACCESS_TOKEN.EXPIRY,
             secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
         }).cookie('refreshToken', refreshToken, {
-            path: 'api/v1',
+            path: '/',
             domain: DOMAIN,
             sameSite: 'strict',
             maxAge: 1000 * config.REFRESH_TOKEN.EXPIRY,

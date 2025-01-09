@@ -153,6 +153,7 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
         const accessToken = GenerateJwtToken(
             {
                 userId: user.id as string,
+                name: user.name,
                 role: user.role
             },
             config.ACCESS_TOKEN.SECRET as string,
@@ -161,13 +162,12 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
 
         const refreshToken = GenerateJwtToken(
             {
-                userId: user.id as string,
-                role: user.role
+                userId: user.id as string
             },
             config.REFRESH_TOKEN.SECRET as string,
             config.REFRESH_TOKEN.EXPIRY
         )
-
+        
         user.lastLoginAt = dayjs().utc().toDate()
         await user.save()
 
