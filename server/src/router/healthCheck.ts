@@ -4,6 +4,12 @@ import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
 const router = Router()
 
+/*
+    Route: /api/v1/health
+    Method: GET
+    Desc: Get system heatlh
+    Access: Protected
+*/
 router.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
         const healthData = getHealth()

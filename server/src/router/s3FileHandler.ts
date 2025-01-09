@@ -9,7 +9,7 @@ const router = Router()
     Route: /api/v1/s3/upload
     Method: POST
     Desc: Uploads a file to AWS S3 bucket
-    Access: Public
+    Access: Protected
     Body: file, fileName, folderName
 */
 router.post('/upload', multerService.single('file'), async (req: Request, res: Response, next: NextFunction) => {
@@ -35,7 +35,7 @@ router.post('/upload', multerService.single('file'), async (req: Request, res: R
     Route: /api/v1/s3/getSignedUrl
     Method: GET
     Desc: Returns a signed URL for a file in AWS S3 bucket
-    Access: Public
+    Access: Protected
     Query: key
 */
 router.get('/getSignedUrl/', async (req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +55,7 @@ router.get('/getSignedUrl/', async (req: Request, res: Response, next: NextFunct
     Route: /api/v1/s3/deleteFile
     Method: DELETE
     Desc: Deletes a file from AWS S3 bucket
-    Access: Public
+    Access: Protected
     Query: key
 */
 router.delete('/deleteFile/', async (req: Request, res: Response, next: NextFunction) => {

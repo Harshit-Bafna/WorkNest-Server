@@ -42,7 +42,7 @@ router.post('/create', async (req: Request, res: Response, next: NextFunction) =
     Method: POST
     Desc: Login a user
     Access: Public
-    Body: UserRegistrationDTO
+    Body: UserLoginDTO
 */
 router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -118,8 +118,6 @@ router.put('/confirmation/:token', async (req: Request, res: Response, next: Nex
     Method: POST
     Desc: Logout user
     Access: Public
-    Params: token
-    Query: code
 */
 router.put('/logout', async (req: Request, res: Response, next: NextFunction) => {
     try {
