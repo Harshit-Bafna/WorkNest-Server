@@ -167,7 +167,7 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
             config.REFRESH_TOKEN.SECRET as string,
             config.REFRESH_TOKEN.EXPIRY
         )
-        
+
         user.lastLoginAt = dayjs().utc().toDate()
         await user.save()
 
@@ -190,6 +190,29 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
                 accessToken: accessToken,
                 refreshToken: refreshToken
             }
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const logoutUser = async (refreshToken: string | undefined): Promise<ApiMessage> => {
+    try {
+        if (refreshToken) {
+            await refreshTokenModel.deleteOne({ token: refreshToken })
+        }
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.LOGOUT,
+            data: null
         }
     } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR

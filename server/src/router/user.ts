@@ -1,13 +1,14 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { LoginUser, RegisterUser, VerifyAccount } from '../controller/user'
+import { LoginUser, logoutUser, RegisterUser, VerifyAccount } from '../controller/user'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
 import { UserLoginDTO } from '../constants/DTO/User/UserLoginDTO'
 import config from '../config/config'
 import { EApplicationEnvironment } from '../constants/applicationEnums'
+import { GetDomain } from '../utils/helper/syncHelpers'
 const router = Router()
 
 /*
@@ -57,13 +58,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
             return ApiError(next, null, req, userDetails.status, userDetails.message)
         }
 
-        let DOMAIN = ''
-        try {
-            const url = new URL(config.SERVER_URL as string)
-            DOMAIN = url.hostname
-        } catch (error) {
-            throw error
-        }
+        const DOMAIN = GetDomain(config.SERVER_URL as string)
 
         const accessToken = (userDetails.data as { accessToken: string }).accessToken
         const refreshToken = (userDetails.data as { refreshToken: string }).refreshToken
@@ -113,6 +108,47 @@ router.put('/confirmation/:token', async (req: Request, res: Response, next: Nex
             return ApiError(next, null, req, verifyUser.status, verifyUser.message)
         }
         return ApiResponse(req, res, verifyUser.status, verifyUser.message, verifyUser.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/user/logout
+    Method: POST
+    Desc: Logout user
+    Access: Public
+    Params: token
+    Query: code
+*/
+router.put('/logout', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { cookies } = req
+        const {refreshToken} = cookies as {refreshToken: string | undefined}
+
+        const userLoggedOut = await logoutUser(refreshToken)
+        if (!userLoggedOut.success) {
+            return ApiError(next, null, req, userLoggedOut.status, userLoggedOut.message)
+        }
+
+        const DOMAIN = GetDomain(config.SERVER_URL as string)
+
+        res.clearCookie('accessToken', {
+            path: '/',
+            domain: DOMAIN,
+            sameSite: 'strict',
+            maxAge: 1000 * config.ACCESS_TOKEN.EXPIRY,
+            secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+        })
+        res.clearCookie('refreshToken', {
+            path: '/',
+            domain: DOMAIN,
+            sameSite: 'strict',
+            maxAge: 1000 * config.REFRESH_TOKEN.EXPIRY,
+            secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+        })
+
+        return ApiResponse(req, res, userLoggedOut.status, userLoggedOut.message, userLoggedOut.data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }

@@ -25,3 +25,12 @@ export const GenerateJwtToken = (payload: object, secret: string, expiry: number
 export const VerifyToken = (token: string, secret: string): string | JwtPayload => {
     return jwt.verify(token, secret)
 }
+
+export const GetDomain = (url: string) => {
+    try {
+        const parsedUrl = new URL(url)
+        return parsedUrl.hostname
+    } catch (error) {
+        throw error
+    }
+}
