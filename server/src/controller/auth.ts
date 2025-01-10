@@ -294,7 +294,7 @@ export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> 
         if (!user) {
             return {
                 success: true,
-                status: 200,
+                status: 400,
                 message: responseMessage.NOT_FOUND('User'),
                 data: null
             }
@@ -303,7 +303,7 @@ export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> 
         if(!user.accountConfirmation.status) {
             return {
                 success: true,
-                status: 200,
+                status: 400,
                 message: responseMessage.ACCOUNT_CONFIRMATION_REQUIRED,
                 data: null
             }
