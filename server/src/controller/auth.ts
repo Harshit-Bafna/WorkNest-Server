@@ -3,6 +3,7 @@ import { UserLoginDTO } from '../constants/DTO/User/UserLoginDTO'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import responseMessage from '../constants/responseMessage'
 import { emailVerificationTemplate } from '../constants/template/emailVerificationTemplate'
+import { forgotPasswordTemplate } from '../constants/template/forgotPasswordTemplate'
 import { verificationSuccessfullTemplate } from '../constants/template/verificationSuccessfullTemplate'
 import refreshTokenModel from '../model/user/refreshTokenModel'
 import userModel from '../model/user/userModel'
@@ -10,7 +11,7 @@ import { sendEmail } from '../service/nodemailerService'
 import { IDecryptedJwt, IRefreshToken, IUser } from '../types/userTypes'
 import { ApiMessage } from '../utils/ApiMessage'
 import { EncryptPassword, FindUserByEmail, VerifyPassword } from '../utils/helper/asyncHelpers'
-import { GenerateJwtToken, GenerateOTP, GenerateRandomId, VerifyToken } from '../utils/helper/syncHelpers'
+import { GenerateJwtToken, GenerateOTP, GenerateRandomId, GenerateResetPasswordExpiry, VerifyToken } from '../utils/helper/syncHelpers'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 
@@ -249,7 +250,7 @@ export const RefreshToken = async (refreshToken: string | undefined): Promise<Ap
         const { userId } = VerifyToken(refreshToken, config.REFRESH_TOKEN.SECRET as string) as IDecryptedJwt
         const user = await userModel.findById(userId)
 
-        if(!user) {
+        if (!user) {
             return {
                 success: false,
                 status: 401,
@@ -276,7 +277,58 @@ export const RefreshToken = async (refreshToken: string | undefined): Promise<Ap
                 accessToken: accessToken
             }
         }
-    } catch (error) {        
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> => {
+    try {
+        const user = await userModel.findOne({ emailAddress: emailAddress })
+        if (!user) {
+            return {
+                success: true,
+                status: 200,
+                message: responseMessage.NOT_FOUND('User'),
+                data: null
+            }
+        }
+
+        if(!user.accountConfirmation.status) {
+            return {
+                success: true,
+                status: 200,
+                message: responseMessage.ACCOUNT_CONFIRMATION_REQUIRED,
+                data: null
+            }
+        }
+
+        const token = GenerateRandomId()
+        const expiry = GenerateResetPasswordExpiry(15)
+
+        user.passwordReset.token = token
+        user.passwordReset.expiry = expiry
+        await user.save()
+
+        const resetLink = `${config.CLIENT_URL}/reset-password/${token}`
+        const to = [emailAddress]
+        const subject = 'Password reset request'
+        const HTML = forgotPasswordTemplate(resetLink)
+        await sendEmail(to, subject, HTML)
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.FOUND('Refresh token'),
+            data: null
+        }
+    } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
         return {
             success: false,

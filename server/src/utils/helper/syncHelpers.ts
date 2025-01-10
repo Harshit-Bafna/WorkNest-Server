@@ -2,6 +2,7 @@ import { v4 } from 'uuid'
 import { emailRegex } from '../../constants/regex'
 import { randomInt } from 'crypto'
 import jwt, { JwtPayload } from 'jsonwebtoken'
+import dayjs from 'dayjs'
 
 export const VerifyEmail = (email: string): boolean => {
     return emailRegex.test(email)
@@ -33,4 +34,8 @@ export const GetDomain = (url: string) => {
     } catch (error) {
         throw error
     }
+}
+
+export const GenerateResetPasswordExpiry = (minute: number) => {
+    return dayjs().valueOf() + (minute * 60 * 1000)
 }

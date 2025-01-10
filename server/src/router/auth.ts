@@ -1,7 +1,7 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { LoginUser, LogoutUser, RefreshToken, RegisterUser, VerifyAccount } from '../controller/user'
+import { ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, VerifyAccount } from '../controller/auth'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
@@ -9,10 +9,11 @@ import { UserLoginDTO } from '../constants/DTO/User/UserLoginDTO'
 import config from '../config/config'
 import { EApplicationEnvironment } from '../constants/applicationEnums'
 import { GetDomain } from '../utils/helper/syncHelpers'
+import responseMessage from '../constants/responseMessage'
 const router = Router()
 
 /*
-    Route: /api/v1/user/create
+    Route: /api/v1/auth/create
     Method: POST
     Desc: Register a new User
     Access: Public
@@ -38,7 +39,7 @@ router.post('/create', async (req: Request, res: Response, next: NextFunction) =
 })
 
 /*
-    Route: /api/v1/user/login
+    Route: /api/v1/auth/login
     Method: POST
     Desc: Login a user
     Access: Public
@@ -83,7 +84,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
 })
 
 /*
-    Route: /api/v1/user/confirmation/:token
+    Route: /api/v1/auth/confirmation/:token
     Method: POST
     Desc: Verify user email
     Access: Public
@@ -114,7 +115,7 @@ router.put('/confirmation/:token', async (req: Request, res: Response, next: Nex
 })
 
 /*
-    Route: /api/v1/user/logout
+    Route: /api/v1/auth/logout
     Method: POST
     Desc: Logout user
     Access: Public
@@ -153,7 +154,7 @@ router.put('/logout', async (req: Request, res: Response, next: NextFunction) =>
 })
 
 /*
-    Route: /api/v1/user/refresh-token
+    Route: /api/v1/auth/refresh-token
     Method: POST
     Desc: Register a new User
     Access: Public
@@ -180,6 +181,32 @@ router.post('/refresh-token', async (req: Request, res: Response, next: NextFunc
             maxAge: 1000 * config.ACCESS_TOKEN.EXPIRY,
             secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
         })
+
+        return ApiResponse(req, res, token.status, token.message, token.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/auth/forgot-password
+    Method: PUT
+    Desc: Initiate reset password using forgot password
+    Access: Public
+    Body: emailAddress
+*/
+router.put('/forgot-password', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const emailAddress = req.query.emailAddress as string
+        if(!emailAddress) {
+            return ApiError(next, null, req, 400, responseMessage.IS_REQUIRED('Email'))
+        }
+
+        const token = await ForgotPassword(emailAddress)
+        if (!token.success) {
+            return ApiError(next, null, req, token.status, token.message)
+        }       
 
         return ApiResponse(req, res, token.status, token.message, token.data)
     } catch (err) {

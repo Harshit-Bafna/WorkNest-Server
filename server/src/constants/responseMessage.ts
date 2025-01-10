@@ -19,5 +19,7 @@ export default {
     UNAUTHORIZED: 'You are not authorized to perform this action',
     LOGOUT: 'User logged out successfully',
     FOUND: (entity: string) => `${entity} found`,
-    INVALID_TOKEN: 'Token is invalid'
+    INVALID_TOKEN: 'Token is invalid',
+    IS_REQUIRED: (entity: string) => `${entity} is required`,
+    ACCOUNT_CONFIRMATION_REQUIRED: 'Account confirmation is required to perform this action'
 }

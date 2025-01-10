@@ -12,7 +12,7 @@ import rateLimit from './middleware/rateLimit'
 
 import healthRouter from './router/healthCheck'
 import awsRouter from './router/s3FileHandler'
-import userRouter from './router/user'
+import authRouter from './router/auth'
 import authentication from './middleware/authentication'
 
 const app: Application = express()
@@ -32,7 +32,7 @@ app.use(express.static(path.join(__dirname, '../', 'public')))
 
 // Open Routes
 app.use(rateLimit)
-app.use('/api/v1/user', userRouter)
+app.use('/api/v1/auth', authRouter)
 
 // Restricted Routes
 app.use(authentication)
