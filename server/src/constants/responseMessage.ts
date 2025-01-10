@@ -22,5 +22,8 @@ export default {
     INVALID_TOKEN: 'Token is invalid',
     IS_REQUIRED: (entity: string) => `${entity} is required`,
     ACCOUNT_CONFIRMATION_REQUIRED: 'Account confirmation is required to perform this action',
-    RESET_PASSWORD_LINK_SENT: 'Reset password link sent'
+    RESET_PASSWORD_LINK_SENT: 'Reset password link sent',
+    LINK_EXPIRED: 'Link expired',
+    INVALID_REQUEST: 'Your request is invalid',
+    PASSWORD_RESET_SUCCESSFULLY: 'Password reset successfully'
 }

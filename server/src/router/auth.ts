@@ -1,7 +1,7 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, VerifyAccount } from '../controller/auth'
+import { ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, ResetPasseord, VerifyAccount } from '../controller/auth'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
@@ -10,6 +10,7 @@ import config from '../config/config'
 import { EApplicationEnvironment } from '../constants/applicationEnums'
 import { GetDomain } from '../utils/helper/syncHelpers'
 import responseMessage from '../constants/responseMessage'
+import { UserResetPasswordDTO } from '../constants/DTO/User/ResetPasswordDTO'
 const router = Router()
 
 /*
@@ -123,7 +124,7 @@ router.put('/confirmation/:token', async (req: Request, res: Response, next: Nex
 router.put('/logout', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { cookies } = req
-        const {refreshToken} = cookies as {refreshToken: string | undefined}
+        const { refreshToken } = cookies as { refreshToken: string | undefined }
 
         const userLoggedOut = await LogoutUser(refreshToken)
         if (!userLoggedOut.success) {
@@ -163,7 +164,7 @@ router.put('/logout', async (req: Request, res: Response, next: NextFunction) =>
 router.post('/refresh-token', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { cookies } = req
-        const {refreshToken} = cookies as {refreshToken: string | undefined}
+        const { refreshToken } = cookies as { refreshToken: string | undefined }
 
         const token = await RefreshToken(refreshToken)
         if (!token.success) {
@@ -193,22 +194,54 @@ router.post('/refresh-token', async (req: Request, res: Response, next: NextFunc
     Method: PUT
     Desc: Initiate reset password using forgot password
     Access: Public
-    Body: emailAddress
+    Query: emailAddress
 */
 router.put('/forgot-password', async (req: Request, res: Response, next: NextFunction) => {
     try {
-
         const emailAddress = req.query.emailAddress as string
-        if(!emailAddress) {
+        if (!emailAddress) {
             return ApiError(next, null, req, 400, responseMessage.IS_REQUIRED('Email'))
         }
 
         const token = await ForgotPassword(emailAddress)
         if (!token.success) {
             return ApiError(next, null, req, token.status, token.message)
-        }       
+        }
 
         return ApiResponse(req, res, token.status, token.message, token.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/auth/reset-password/:token
+    Method: PUT
+    Desc: Resset pasword
+    Access: Public
+    Body: newPassword
+    Params: token
+*/
+router.put('/reset-password/:token', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = req.params.token
+        if (!token) {
+            return ApiError(next, null, req, 400, responseMessage.NOT_FOUND('Token'))
+        }
+
+        const body: object = req.body as object
+
+        const requestValidation = await validateDTO(UserResetPasswordDTO, body)
+        if (!requestValidation.success) {
+            return DtoError(next, req, requestValidation.status, requestValidation.errors)
+        }
+
+        const passwordResetDetails = await ResetPasseord(token, req.body as UserResetPasswordDTO)
+        if (!passwordResetDetails.success) {
+            return ApiError(next, null, req, passwordResetDetails.status, passwordResetDetails.message)
+        }
+
+        return ApiResponse(req, res, passwordResetDetails.status, passwordResetDetails.message, passwordResetDetails.data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }

@@ -1,9 +1,11 @@
 import config from '../config/config'
+import { UserResetPasswordDTO } from '../constants/DTO/User/ResetPasswordDTO'
 import { UserLoginDTO } from '../constants/DTO/User/UserLoginDTO'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import responseMessage from '../constants/responseMessage'
 import { emailVerificationTemplate } from '../constants/template/emailVerificationTemplate'
 import { forgotPasswordTemplate } from '../constants/template/forgotPasswordTemplate'
+import { passwordResetSuccessTemplate } from '../constants/template/passwordResetSuccessTemplate'
 import { verificationSuccessfullTemplate } from '../constants/template/verificationSuccessfullTemplate'
 import refreshTokenModel from '../model/user/refreshTokenModel'
 import userModel from '../model/user/userModel'
@@ -294,7 +296,7 @@ export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> 
         if (!user) {
             return {
                 success: true,
-                status: 400,
+                status: 404,
                 message: responseMessage.NOT_FOUND('User'),
                 data: null
             }
@@ -326,6 +328,78 @@ export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> 
             success: true,
             status: 200,
             message: responseMessage.RESET_PASSWORD_LINK_SENT,
+            data: null
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const ResetPasseord = async (token: string, input: UserResetPasswordDTO):Promise<ApiMessage> => {
+    const password = input.newPassword
+    try {
+        const user = await userModel.findOne({'passwordReset.token': token})
+        if(!user) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('User'),
+                data: null
+            }
+        }
+
+        if(!user.accountConfirmation.status) {
+            return {
+                success: true,
+                status: 400,
+                message: responseMessage.ACCOUNT_CONFIRMATION_REQUIRED,
+                data: null
+            }
+        }
+
+        const storedExpiry = user.passwordReset.expiry
+        const currentTimestamp = dayjs().valueOf()
+
+        if(!storedExpiry) {
+            return {
+                success: true,
+                status: 400,
+                message: responseMessage.INVALID_REQUEST,
+                data: null
+            }
+        }
+    
+        if(currentTimestamp > storedExpiry) {
+            return {
+                success: true,
+                status: 400,
+                message: responseMessage.LINK_EXPIRED,
+                data: null
+            }
+        }
+
+        const hashedPassword = await EncryptPassword(password)
+        user.password = hashedPassword
+        user.passwordReset.token = null
+        user.passwordReset.expiry = null
+        user.passwordReset.lastResetAt = dayjs().utc().toDate()
+        await user.save()
+
+        const to = [user.emailAddress]
+        const subject = 'Password reset successful'
+        const HTML = passwordResetSuccessTemplate()
+        await sendEmail(to, subject, HTML)
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.PASSWORD_RESET_SUCCESSFULLY,
             data: null
         }
     } catch (error) {

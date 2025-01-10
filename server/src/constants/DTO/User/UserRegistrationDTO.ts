@@ -12,8 +12,8 @@ export class UserRegistrationDTO {
     @Matches(emailRegex, { message: 'Invalid email address' })
     emailAddress!: string
 
-    @IsString({ message: 'Timezone must be a string' })
-    @IsNotEmpty({ message: 'Timezone is required' })
+    @IsString({ message: 'Password must be a string' })
+    @IsNotEmpty({ message: 'Password is required' })
     @Matches(passwordRegex, {
         message:
             'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character ( !, @, #, $, _ )'
