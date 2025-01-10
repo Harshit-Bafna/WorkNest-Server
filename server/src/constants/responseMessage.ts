@@ -17,5 +17,7 @@ export default {
     LOGIN: 'User logged in successfully',
     INVALID_LOGIN_CREDENTIALS: 'Invalid credentials',
     UNAUTHORIZED: 'You are not authorized to perform this action',
-    LOGOUT: 'User logged out successfully'
+    LOGOUT: 'User logged out successfully',
+    FOUND: (entity: string) => `${entity} found`,
+    INVALID_TOKEN: 'Token is invalid'
 }

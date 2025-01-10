@@ -7,10 +7,10 @@ import { verificationSuccessfullTemplate } from '../constants/template/verificat
 import refreshTokenModel from '../model/user/refreshTokenModel'
 import userModel from '../model/user/userModel'
 import { sendEmail } from '../service/nodemailerService'
-import { IRefreshToken, IUser } from '../types/userTypes'
+import { IDecryptedJwt, IRefreshToken, IUser } from '../types/userTypes'
 import { ApiMessage } from '../utils/ApiMessage'
 import { EncryptPassword, FindUserByEmail, VerifyPassword } from '../utils/helper/asyncHelpers'
-import { GenerateJwtToken, GenerateOTP, GenerateRandomId } from '../utils/helper/syncHelpers'
+import { GenerateJwtToken, GenerateOTP, GenerateRandomId, VerifyToken } from '../utils/helper/syncHelpers'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 
@@ -172,7 +172,7 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
         await user.save()
 
         const payload: IRefreshToken = {
-            token: accessToken
+            token: refreshToken
         }
 
         await refreshTokenModel.create(payload)
@@ -202,7 +202,7 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
     }
 }
 
-export const logoutUser = async (refreshToken: string | undefined): Promise<ApiMessage> => {
+export const LogoutUser = async (refreshToken: string | undefined): Promise<ApiMessage> => {
     try {
         if (refreshToken) {
             await refreshTokenModel.deleteOne({ token: refreshToken })
@@ -215,6 +215,68 @@ export const logoutUser = async (refreshToken: string | undefined): Promise<ApiM
             data: null
         }
     } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const RefreshToken = async (refreshToken: string | undefined): Promise<ApiMessage> => {
+    try {
+        if (!refreshToken) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.NOT_FOUND('Refresh token'),
+                data: null
+            }
+        }
+
+        const rft = await refreshTokenModel.findOne({ token: refreshToken })
+        if (!rft) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.INVALID_TOKEN,
+                data: null
+            }
+        }
+
+        const { userId } = VerifyToken(refreshToken, config.REFRESH_TOKEN.SECRET as string) as IDecryptedJwt
+        const user = await userModel.findById(userId)
+
+        if(!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        const accessToken = GenerateJwtToken(
+            {
+                userId: user.id as string,
+                name: user.name,
+                role: user.role
+            },
+            config.ACCESS_TOKEN.SECRET as string,
+            config.ACCESS_TOKEN.EXPIRY
+        )
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.FOUND('Refresh token'),
+            data: {
+                accessToken: accessToken
+            }
+        }
+    } catch (error) {        
         const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
         return {
             success: false,

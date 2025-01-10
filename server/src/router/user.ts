@@ -1,7 +1,7 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { LoginUser, logoutUser, RegisterUser, VerifyAccount } from '../controller/user'
+import { LoginUser, LogoutUser, RefreshToken, RegisterUser, VerifyAccount } from '../controller/user'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
@@ -124,7 +124,7 @@ router.put('/logout', async (req: Request, res: Response, next: NextFunction) =>
         const { cookies } = req
         const {refreshToken} = cookies as {refreshToken: string | undefined}
 
-        const userLoggedOut = await logoutUser(refreshToken)
+        const userLoggedOut = await LogoutUser(refreshToken)
         if (!userLoggedOut.success) {
             return ApiError(next, null, req, userLoggedOut.status, userLoggedOut.message)
         }
@@ -147,6 +147,41 @@ router.put('/logout', async (req: Request, res: Response, next: NextFunction) =>
         })
 
         return ApiResponse(req, res, userLoggedOut.status, userLoggedOut.message, userLoggedOut.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/user/refresh-token
+    Method: POST
+    Desc: Register a new User
+    Access: Public
+    Body: UserRegistrationDTO
+*/
+router.post('/refresh-token', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { cookies } = req
+        const {refreshToken} = cookies as {refreshToken: string | undefined}
+
+        const token = await RefreshToken(refreshToken)
+        if (!token.success) {
+            return ApiError(next, null, req, token.status, token.message)
+        }
+
+        const DOMAIN = GetDomain(config.SERVER_URL as string)
+
+        const accessToken = (token.data as { accessToken: string }).accessToken
+
+        res.cookie('accessToken', accessToken, {
+            path: '/',
+            domain: DOMAIN,
+            sameSite: 'strict',
+            maxAge: 1000 * config.ACCESS_TOKEN.EXPIRY,
+            secure: !(config.ENV === EApplicationEnvironment.DEVELOPMENT)
+        })
+
+        return ApiResponse(req, res, token.status, token.message, token.data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }

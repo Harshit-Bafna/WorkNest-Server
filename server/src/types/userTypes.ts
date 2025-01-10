@@ -33,4 +33,5 @@ export interface IAuthenticatedRequest extends Request {
 export interface IDecryptedJwt extends JwtPayload {
     userId: string
     role: string
+    name: string
 }
