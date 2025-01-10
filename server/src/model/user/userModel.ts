@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema<IUser>(
         role: {
             type: String,
             default: EUserRole.USER,
-            enum: EUserRole,
+            enum: Object.values(EUserRole),
             required: true
         },
         accountConfirmation: {
