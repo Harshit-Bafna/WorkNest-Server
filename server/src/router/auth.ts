@@ -1,7 +1,7 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, ResetPasseord, VerifyAccount } from '../controller/auth'
+import { ChangePassword, ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, ResetPasseord, VerifyAccount } from '../controller/auth'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
@@ -11,6 +11,8 @@ import { EApplicationEnvironment } from '../constants/applicationEnums'
 import { GetDomain } from '../utils/helper/syncHelpers'
 import responseMessage from '../constants/responseMessage'
 import { UserResetPasswordDTO } from '../constants/DTO/User/ResetPasswordDTO'
+import { UserChangePasswordDTO } from '../constants/DTO/User/ChangePasswordDTO'
+import authentication from '../middleware/authentication'
 const router = Router()
 
 /*
@@ -242,6 +244,39 @@ router.put('/reset-password/:token', async (req: Request, res: Response, next: N
         }
 
         return ApiResponse(req, res, passwordResetDetails.status, passwordResetDetails.message, passwordResetDetails.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/auth/change-password
+    Method: PUT
+    Desc: Change pasword
+    Access: Protected
+    Body: UserChangePasswordDTO
+*/
+router.put('/change-password', authentication, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const body: object = req.body as object
+
+        const requestValidation = await validateDTO(UserChangePasswordDTO, body)
+        if (!requestValidation.success) {
+            return DtoError(next, req, requestValidation.status, requestValidation.errors)
+        }
+
+        const { cookies } = req
+        const { accessToken } = cookies as { accessToken: string | undefined }
+        if(!accessToken) {
+            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
+        }
+
+        const passwordChangeDetails = await ChangePassword(accessToken, req.body as UserChangePasswordDTO)
+        if (!passwordChangeDetails.success) {
+            return ApiError(next, null, req, passwordChangeDetails.status, passwordChangeDetails.message)
+        }
+
+        return ApiResponse(req, res, passwordChangeDetails.status, passwordChangeDetails.message, passwordChangeDetails.data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }

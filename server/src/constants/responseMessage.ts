@@ -25,5 +25,9 @@ export default {
     RESET_PASSWORD_LINK_SENT: 'Reset password link sent',
     LINK_EXPIRED: 'Link expired',
     INVALID_REQUEST: 'Your request is invalid',
-    PASSWORD_RESET_SUCCESSFULLY: 'Password reset successfully'
+    PASSWORD_RESET_SUCCESSFULLY: 'Password reset successfully',
+    WRONG_OLD_PASSWORD: 'Invalid old password',
+    PASSWORD_NOT_MATCH: 'New password and confirm password must match',
+    OLD_NEW_PASSWORD_SAME: 'New password does not match with new password',
+    PASSWORD_CHANGED: 'Password changed successfully'
 }

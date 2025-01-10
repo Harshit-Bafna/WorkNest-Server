@@ -1,4 +1,5 @@
 import config from '../config/config'
+import { UserChangePasswordDTO } from '../constants/DTO/User/ChangePasswordDTO'
 import { UserResetPasswordDTO } from '../constants/DTO/User/ResetPasswordDTO'
 import { UserLoginDTO } from '../constants/DTO/User/UserLoginDTO'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
@@ -302,7 +303,7 @@ export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> 
             }
         }
 
-        if(!user.accountConfirmation.status) {
+        if (!user.accountConfirmation.status) {
             return {
                 success: true,
                 status: 400,
@@ -341,11 +342,11 @@ export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> 
     }
 }
 
-export const ResetPasseord = async (token: string, input: UserResetPasswordDTO):Promise<ApiMessage> => {
+export const ResetPasseord = async (token: string, input: UserResetPasswordDTO): Promise<ApiMessage> => {
     const password = input.newPassword
     try {
-        const user = await userModel.findOne({'passwordReset.token': token})
-        if(!user) {
+        const user = await userModel.findOne({ 'passwordReset.token': token })
+        if (!user) {
             return {
                 success: false,
                 status: 404,
@@ -354,7 +355,7 @@ export const ResetPasseord = async (token: string, input: UserResetPasswordDTO):
             }
         }
 
-        if(!user.accountConfirmation.status) {
+        if (!user.accountConfirmation.status) {
             return {
                 success: true,
                 status: 400,
@@ -366,7 +367,7 @@ export const ResetPasseord = async (token: string, input: UserResetPasswordDTO):
         const storedExpiry = user.passwordReset.expiry
         const currentTimestamp = dayjs().valueOf()
 
-        if(!storedExpiry) {
+        if (!storedExpiry) {
             return {
                 success: true,
                 status: 400,
@@ -374,8 +375,8 @@ export const ResetPasseord = async (token: string, input: UserResetPasswordDTO):
                 data: null
             }
         }
-    
-        if(currentTimestamp > storedExpiry) {
+
+        if (currentTimestamp > storedExpiry) {
             return {
                 success: true,
                 status: 400,
@@ -402,6 +403,75 @@ export const ResetPasseord = async (token: string, input: UserResetPasswordDTO):
             message: responseMessage.PASSWORD_RESET_SUCCESSFULLY,
             data: null
         }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const ChangePassword = async (accessToken: string, input: UserChangePasswordDTO): Promise<ApiMessage> => {
+    const { oldPassword, newPassword, confirmPassword } = input
+    try {
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+        const user = await userModel.findById(userId).select('+password')
+        if (!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        const isPasswordMatching = await VerifyPassword(oldPassword, user.password)
+        if (!isPasswordMatching) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.WRONG_OLD_PASSWORD,
+                data: null
+            }
+        }
+
+        if (newPassword !== confirmPassword) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.PASSWORD_NOT_MATCH,
+                data: null
+            }
+        }
+
+        if (newPassword === oldPassword) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.OLD_NEW_PASSWORD_SAME,
+                data: null
+            }
+        }
+
+        const newEncryptedPassword = await EncryptPassword(newPassword)
+        user.password = newEncryptedPassword
+        await user.save()
+
+        const to = [user.emailAddress]
+        const subject = 'Password change successfully'
+        const HTML = passwordResetSuccessTemplate()
+        await sendEmail(to, subject, HTML)
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.PASSWORD_CHANGED,
+            data: null
+        }
+
     } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
         return {
