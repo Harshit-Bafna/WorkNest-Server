@@ -13,6 +13,7 @@ import responseMessage from '../constants/responseMessage'
 import { UserResetPasswordDTO } from '../constants/DTO/User/ResetPasswordDTO'
 import { UserChangePasswordDTO } from '../constants/DTO/User/ChangePasswordDTO'
 import authentication from '../middleware/authentication'
+import rateLimit from '../middleware/rateLimit'
 const router = Router()
 
 /*
@@ -22,7 +23,7 @@ const router = Router()
     Access: Public
     Body: UserRegistrationDTO
 */
-router.post('/create', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/create', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const body: object = req.body as object
 
@@ -48,7 +49,7 @@ router.post('/create', async (req: Request, res: Response, next: NextFunction) =
     Access: Public
     Body: UserLoginDTO
 */
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/login', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const body: object = req.body as object
 
@@ -94,7 +95,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
     Params: token
     Query: code
 */
-router.put('/confirmation/:token', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/confirmation/:token', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token: string = req.params.token
         const code: string = req.query.code as string
@@ -123,7 +124,7 @@ router.put('/confirmation/:token', async (req: Request, res: Response, next: Nex
     Desc: Logout user
     Access: Public
 */
-router.put('/logout', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/logout', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { cookies } = req
         const { refreshToken } = cookies as { refreshToken: string | undefined }
@@ -163,7 +164,7 @@ router.put('/logout', async (req: Request, res: Response, next: NextFunction) =>
     Access: Public
     Body: UserRegistrationDTO
 */
-router.post('/refresh-token', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/refresh-token', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { cookies } = req
         const { refreshToken } = cookies as { refreshToken: string | undefined }
@@ -198,7 +199,7 @@ router.post('/refresh-token', async (req: Request, res: Response, next: NextFunc
     Access: Public
     Query: emailAddress
 */
-router.put('/forgot-password', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/forgot-password', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const emailAddress = req.query.emailAddress as string
         if (!emailAddress) {
@@ -224,7 +225,7 @@ router.put('/forgot-password', async (req: Request, res: Response, next: NextFun
     Body: newPassword
     Params: token
 */
-router.put('/reset-password/:token', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/reset-password/:token', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.params.token
         if (!token) {
@@ -267,7 +268,7 @@ router.put('/change-password', authentication, async (req: Request, res: Respons
 
         const { cookies } = req
         const { accessToken } = cookies as { accessToken: string | undefined }
-        if(!accessToken) {
+        if (!accessToken) {
             return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
         }
 

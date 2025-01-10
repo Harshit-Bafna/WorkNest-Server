@@ -8,8 +8,6 @@ import cors from 'cors'
 import config from './config/config'
 import cookieParser from 'cookie-parser'
 
-import rateLimit from './middleware/rateLimit'
-
 import healthRouter from './router/healthCheck'
 import awsRouter from './router/s3FileHandler'
 import authRouter from './router/auth'
@@ -31,7 +29,6 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, '../', 'public')))
 
 // Open Routes
-app.use(rateLimit)
 app.use('/api/v1/auth', authRouter)
 
 // Restricted Routes
