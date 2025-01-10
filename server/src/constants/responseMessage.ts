@@ -21,5 +21,6 @@ export default {
     FOUND: (entity: string) => `${entity} found`,
     INVALID_TOKEN: 'Token is invalid',
     IS_REQUIRED: (entity: string) => `${entity} is required`,
-    ACCOUNT_CONFIRMATION_REQUIRED: 'Account confirmation is required to perform this action'
+    ACCOUNT_CONFIRMATION_REQUIRED: 'Account confirmation is required to perform this action',
+    RESET_PASSWORD_LINK_SENT: 'Reset password link sent'
 }

@@ -325,7 +325,7 @@ export const ForgotPassword = async (emailAddress: string): Promise<ApiMessage> 
         return {
             success: true,
             status: 200,
-            message: responseMessage.FOUND('Refresh token'),
+            message: responseMessage.RESET_PASSWORD_LINK_SENT,
             data: null
         }
     } catch (error) {
