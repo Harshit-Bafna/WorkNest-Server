@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 import config from '../config/config'
 import { EUserRole } from '../constants/applicationEnums'
-import { RegisterOrganisationAdminDTO } from '../constants/DTO/Organisation/RegisterOrganisationAdminDTO'
 import { RegisterOrganisationDTO } from '../constants/DTO/Organisation/RegisterOrganisationDTO'
 import responseMessage from '../constants/responseMessage'
 import { emailVerificationTemplate } from '../constants/template/emailVerificationTemplate'
@@ -16,10 +15,8 @@ import { organisationRegistrationConfirmationTemplate } from '../constants/templ
 
 export const RegisterOrganisation = async (
     organisationDetails: RegisterOrganisationDTO,
-    adminDetails: RegisterOrganisationAdminDTO
 ): Promise<ApiMessage> => {
-    const { name, emailAddress, logo, website, registrationNumber } = organisationDetails
-    const { adminName, password, conscent } = adminDetails
+    const { name, emailAddress, logo, website, registrationNumber, adminName, password, conscent } = organisationDetails
     try {
         const admin = await FindUserByEmail(emailAddress)
         const organisation = await FindOrganisationByEmail(emailAddress)
@@ -84,6 +81,9 @@ export const RegisterOrganisation = async (
         const organisationSetupSuccessSubject = 'Organisation Registered successfully'
         const organisationSetupSuccessHTML = organisationRegistrationConfirmationTemplate(adminName, name, registrationNumber)
         await sendEmail(to, organisationSetupSuccessSubject, organisationSetupSuccessHTML)
+
+        newUser.organisation.organisationId = newOrganisation.id as mongoose.Schema.Types.ObjectId
+        await newUser.save()
 
         return {
             success: true,
