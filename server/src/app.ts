@@ -8,10 +8,12 @@ import cors from 'cors'
 import config from './config/config'
 import cookieParser from 'cookie-parser'
 
+import authentication from './middleware/authentication'
+
 import healthRouter from './router/healthCheck'
 import awsRouter from './router/s3FileHandler'
 import authRouter from './router/auth'
-import authentication from './middleware/authentication'
+import organisationRouter from './router/organisation'
 
 const app: Application = express()
 
@@ -30,7 +32,7 @@ app.use(express.static(path.join(__dirname, '../', 'public')))
 
 // Open Routes
 app.use('/api/v1/auth', authRouter)
-
+app.use('/api/v1/organisation', organisationRouter)
 // Restricted Routes
 app.use(authentication)
 app.use('/api/v1/health', healthRouter)
