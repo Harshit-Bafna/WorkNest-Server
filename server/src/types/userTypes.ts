@@ -1,12 +1,18 @@
 import { Request } from 'express'
 import { EUserRole } from '../constants/applicationEnums'
 import { JwtPayload } from 'jsonwebtoken'
+import mongoose from 'mongoose'
 
 export interface IUser {
     name: string
     emailAddress: string
     password: string
-    role: EUserRole
+    role: EUserRole,
+    organisation: {
+        isAssociated: boolean
+        organisationId: mongoose.Schema.Types.ObjectId | null
+        role: string | null
+    },
     accountConfirmation: {
         status: boolean
         token: string
@@ -19,6 +25,16 @@ export interface IUser {
         lastResetAt: Date | null
     }
     lastLoginAt: Date | null
+    consent: boolean
+}
+
+export interface IOrganisation {
+    name: string
+    emailAddress: string
+    logo: string | null
+    website: string | null
+    registrationNumber: string | null
+    adminId: mongoose.Schema.Types.ObjectId
     consent: boolean
 }
 

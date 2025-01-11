@@ -29,5 +29,6 @@ export default {
     WRONG_OLD_PASSWORD: 'Invalid old password',
     PASSWORD_NOT_MATCH: 'New password and confirm password must match',
     OLD_NEW_PASSWORD_SAME: 'New password does not match with new password',
-    PASSWORD_CHANGED: 'Password changed successfully'
+    PASSWORD_CHANGED: 'Password changed successfully',
+    ALREADY_IN_USE: (entity: string) => `${entity} already in use`
 }

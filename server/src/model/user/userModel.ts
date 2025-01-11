@@ -26,6 +26,23 @@ const userSchema = new mongoose.Schema<IUser>(
             enum: Object.values(EUserRole),
             required: true
         },
+        organisation: {
+            _id: false,
+            isAssociated: {
+                type: Boolean,
+                default: false,
+                required: true
+            },
+            organisationId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'organisation',
+                required: false
+            },
+            role:{
+                type: String,
+                required: false
+            }
+        },
         accountConfirmation: {
             _id: false,
             status: {

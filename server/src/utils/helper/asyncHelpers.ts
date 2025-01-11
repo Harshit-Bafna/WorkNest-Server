@@ -1,4 +1,5 @@
 import responseMessage from '../../constants/responseMessage'
+import organisationModel from '../../model/user/organisationModel'
 import userModel from '../../model/user/userModel'
 import argon2 from 'argon2'
 
@@ -9,6 +10,16 @@ export const FindUserByEmail = async (email: string, select: string = '') => {
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : responseMessage.ERROR_FETCHING('User', 'email')
         throw new Error(`Error finding user by email: ${errorMessage}`)
+    }
+}
+
+export const FindOrganisationByEmail = async (email: string) => {
+    try {
+        const organisation = await organisationModel.findOne({ emailAddress: email })
+        return organisation
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : responseMessage.ERROR_FETCHING('Organisation', 'email')
+        throw new Error(`Error finding organisation by email: ${errorMessage}`)
     }
 }
 

@@ -42,6 +42,11 @@ export const RegisterUser = async (input: UserRegistrationDTO): Promise<ApiMessa
         const payload: IUser = {
             name: name,
             emailAddress: emailAddress,
+            organisation: {
+                isAssociated: false,
+                organisationId: null,
+                role: null
+            },
             accountConfirmation: {
                 status: false,
                 token: token,
