@@ -16,11 +16,11 @@ const organisationSchema = new mongoose.Schema<IOrganisation>(
         },
         logo: {
             type: String,
-            required: true
+            required: false
         },
         website: {
             type: String,
-            required: true
+            required: false
         },
         registrationNumber: {
             type: String,
