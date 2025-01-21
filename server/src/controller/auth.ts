@@ -149,6 +149,14 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
                 data: null
             }
         }
+        if(!user.accountConfirmation.status) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.CONFIRM_YOUR_aCCOUNT,
+                data: null
+            }
+        }
         const isPasswordCorrect = await VerifyPassword(password, user.password)
         if (!isPasswordCorrect) {
             return {

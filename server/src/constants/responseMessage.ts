@@ -13,6 +13,7 @@ export default {
         return `Error while fetching ${entity} with ${identifier}`
     },
     INVALID_CONFIRMATION_LINK: 'Invalid confirmation token or code',
+    CONFIRM_YOUR_aCCOUNT: 'Please comfirm your account before login',
     ACCOUNT_ALREADY_CONFIRMED: 'Account already confirmed',
     LOGIN: 'User logged in successfully',
     INVALID_LOGIN_CREDENTIALS: 'Invalid credentials',
