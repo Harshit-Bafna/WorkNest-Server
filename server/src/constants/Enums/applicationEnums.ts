@@ -8,5 +8,6 @@ export enum EUserRole {
     MANAGER = 'Manager',
     ADMIN = 'Admin',
     USER = 'User',
-    ORGANISATION_ADMIN = 'Organisation Admin'
+    ORGANISATION_ADMIN = 'Organisation Admin',
+    ORGANISATION_USER = 'Organisation User'
 }

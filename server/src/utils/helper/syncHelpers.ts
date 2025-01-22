@@ -37,5 +37,25 @@ export const GetDomain = (url: string) => {
 }
 
 export const GenerateResetPasswordExpiry = (minute: number) => {
-    return dayjs().valueOf() + (minute * 60 * 1000)
+    return dayjs().valueOf() + minute * 60 * 1000
+}
+
+export const GeneratePassword = (): string => {
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+    const digits = '0123456789'
+    const specialChars = '!@#$%^&*()_+[]{}|;:,.<>?'
+
+    const getRandomChar = (charset: string) => charset[Math.floor(Math.random() * charset.length)]
+
+    let password = [getRandomChar(uppercase), getRandomChar(lowercase), getRandomChar(digits), getRandomChar(specialChars)]
+
+    const allChars = uppercase + lowercase + digits + specialChars
+    for (let i = password.length; i < 8; i++) {
+        password.push(getRandomChar(allChars))
+    }
+
+    password = password.sort(() => Math.random() - 0.5)
+
+    return password.join('')
 }

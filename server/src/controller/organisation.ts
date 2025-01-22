@@ -8,14 +8,18 @@ import userModel from '../model/user/userModel'
 import { sendEmail } from '../service/nodemailerService'
 import { IOrganisation, IUser } from '../types/userTypes'
 import { ApiMessage } from '../utils/ApiMessage'
-import { EncryptPassword, FindOrganisationByEmail, FindUserByEmail } from '../utils/helper/asyncHelpers'
-import { GenerateRandomId, GenerateOTP } from '../utils/helper/syncHelpers'
+import { EncryptPassword, FindOrganisationByEmail, FindUserByEmail, VerifyPassword } from '../utils/helper/asyncHelpers'
+import { GenerateRandomId, GenerateOTP, GeneratePassword } from '../utils/helper/syncHelpers'
 import organisationModel from '../model/user/organisationModel'
 import { organisationRegistrationConfirmationTemplate } from '../constants/template/organisationRegistrationSuccesTemplate'
+import { RegisterOrganisationEmployeeDTO } from '../constants/DTO/Organisation/RegisterOrganisationEmployeeDTO'
+import { invitationTemplate } from '../constants/template/invitationTemplate'
+import { AcceptInvitationDTO } from '../constants/DTO/Organisation/AcceptInvitationDTO'
+import dayjs from 'dayjs'
+import { verificationSuccessfullTemplate } from '../constants/template/verificationSuccessfullTemplate'
+import { passwordResetSuccessTemplate } from '../constants/template/passwordResetSuccessTemplate'
 
-export const RegisterOrganisation = async (
-    organisationDetails: RegisterOrganisationDTO,
-): Promise<ApiMessage> => {
+export const RegisterOrganisation = async (organisationDetails: RegisterOrganisationDTO): Promise<ApiMessage> => {
     const { name, emailAddress, logo, website, registrationNumber, adminName, password, conscent } = organisationDetails
     try {
         const admin = await FindUserByEmail(emailAddress)
@@ -96,6 +100,167 @@ export const RegisterOrganisation = async (
         }
     } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const AddEmployeeInOrganization = async (input: RegisterOrganisationEmployeeDTO): Promise<ApiMessage> => {
+    const { organizationId, name, emailAddress } = input
+    try {
+        const organisation = await organisationModel.findById(organizationId)
+        if (!organisation) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Organization'),
+                data: null
+            }
+        }
+
+        const password = GeneratePassword()
+        const encryptedPassword = await EncryptPassword(password)
+        const token = GenerateRandomId()
+        const code = GenerateOTP(6)
+
+        const userPayload: IUser = {
+            name: name,
+            emailAddress: emailAddress,
+            organisation: {
+                isAssociated: true,
+                organisationId: organisation.id as mongoose.Schema.Types.ObjectId,
+                role: EUserRole.USER
+            },
+            accountConfirmation: {
+                status: false,
+                token: token,
+                code: code,
+                timestamp: null
+            },
+            passwordReset: {
+                token: null,
+                expiry: null,
+                lastResetAt: null
+            },
+            password: encryptedPassword,
+            role: EUserRole.ORGANISATION_USER,
+            lastLoginAt: null,
+            consent: true
+        }
+
+        const newUser = await userModel.create(userPayload)
+        if (!newUser) {
+            return {
+                success: false,
+                status: 500,
+                message: responseMessage.ERROR_CREATION('user'),
+                data: null
+            }
+        }
+
+        const invitationUrl = `${config.CLIENT_URL}/invitation/${token}?code=${code}`
+        const to = [emailAddress]
+        const invitationSubject = `WorkNest - Invitation from ${organisation.name}`
+        const invitationHTML = invitationTemplate(invitationUrl, password, organisation.name)
+        await sendEmail(to, invitationSubject, invitationHTML)
+
+        return {
+            success: true,
+            status: 201,
+            message: responseMessage.SUCCESS,
+            data: {
+                newUser: newUser
+            }
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const ValidateInvitation = async (input: AcceptInvitationDTO, token: string, code: string): Promise<ApiMessage> => {
+    const { oldPassword, newPassword, confirmPassword } = input
+    try {
+        const user = await userModel.findOne({
+            'accountConfirmation.token': token,
+            'accountConfirmation.code': code
+        }).select('+password')
+        if (!user) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.INVALID_CONFIRMATION_LINK,
+                data: null
+            }
+        } else if (user.accountConfirmation.status) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.ACCOUNT_ALREADY_CONFIRMED,
+                data: null
+            }
+        }
+        
+        const isPasswordMatching = await VerifyPassword(oldPassword, user.password)
+        if (!isPasswordMatching) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.WRONG_OLD_PASSWORD,
+                data: null
+            }
+        }
+
+        if (newPassword !== confirmPassword) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.PASSWORD_NOT_MATCH,
+                data: null
+            }
+        }
+
+        if (newPassword === oldPassword) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.OLD_NEW_PASSWORD_SAME,
+                data: null
+            }
+        }
+
+        const newEncryptedPassword = await EncryptPassword(newPassword)
+        user.password = newEncryptedPassword
+        user.accountConfirmation.status = true
+        user.accountConfirmation.timestamp = dayjs().utc().toDate()
+        await user.save()
+
+        const to = [user.emailAddress]
+        const passwordSubject = 'Password change successfully'
+        const confirmationSubject = 'Welcome to Worknest: Account verified'
+        const passwordHTML = passwordResetSuccessTemplate()
+        const confirmationHTML = verificationSuccessfullTemplate()
+
+        await sendEmail(to, passwordSubject, passwordHTML)
+        await sendEmail(to, confirmationSubject, confirmationHTML)
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.PASSWORD_CHANGED,
+            data: null
+        }
+    } catch (error) {        
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
         return {
             success: false,
             status: 500,
