@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import config from '../config/config'
-import { EUserRole } from '../constants/applicationEnums'
+import { EUserRole } from '../constants/Enums/applicationEnums'
 import { RegisterOrganisationDTO } from '../constants/DTO/Organisation/RegisterOrganisationDTO'
 import responseMessage from '../constants/responseMessage'
 import { emailVerificationTemplate } from '../constants/template/emailVerificationTemplate'

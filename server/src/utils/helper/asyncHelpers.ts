@@ -13,6 +13,16 @@ export const FindUserByEmail = async (email: string, select: string = '') => {
     }
 }
 
+export const FindUserById = async (id: string, select: string = '') => {
+    try {
+        const user = await userModel.findOne({ id: id }).select(select)
+        return user
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : responseMessage.ERROR_FETCHING('User', 'id')
+        throw new Error(`Error finding user by email: ${errorMessage}`)
+    }
+}
+
 export const FindOrganisationByEmail = async (email: string) => {
     try {
         const organisation = await organisationModel.findOne({ emailAddress: email })

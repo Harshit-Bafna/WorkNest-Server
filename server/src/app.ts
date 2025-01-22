@@ -14,6 +14,7 @@ import healthRouter from './router/healthCheck'
 import awsRouter from './router/s3FileHandler'
 import authRouter from './router/auth'
 import organisationRouter from './router/organisation'
+import projectRouter from './router/projects'
 
 const app: Application = express()
 
@@ -37,6 +38,7 @@ app.use('/api/v1/organisation', organisationRouter)
 app.use(authentication)
 app.use('/api/v1/health', healthRouter)
 app.use('/api/v1/s3', awsRouter)
+app.use('/api/v1/project', projectRouter)
 
 // 404 hander
 app.use((req: Request, _: Response, next: NextFunction) => {

@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { EUserRole } from '../constants/applicationEnums'
+import { EUserRole } from '../constants/Enums/applicationEnums'
 import { JwtPayload } from 'jsonwebtoken'
 import mongoose from 'mongoose'
 

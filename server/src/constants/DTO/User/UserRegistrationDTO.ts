@@ -1,6 +1,6 @@
 import { IsBoolean, IsEnum, IsNotEmpty, IsString, Matches } from 'class-validator'
 import { emailRegex, passwordRegex } from '../../regex'
-import { EUserRole } from '../../applicationEnums'
+import { EUserRole } from '../../Enums/applicationEnums'
 
 export class UserRegistrationDTO {
     @IsString({ message: 'Name must be a string' })

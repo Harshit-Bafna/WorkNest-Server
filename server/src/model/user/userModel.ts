@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import { IUser } from '../../types/userTypes'
-import { EUserRole } from '../../constants/applicationEnums'
+import { EUserRole } from '../../constants/Enums/applicationEnums'
 
 const userSchema = new mongoose.Schema<IUser>(
     {
