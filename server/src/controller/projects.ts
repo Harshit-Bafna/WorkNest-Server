@@ -4,7 +4,7 @@ import responseMessage from '../constants/responseMessage'
 import { IProject, IProjectTeamMembers } from '../types/projectTypes'
 import { ApiMessage } from '../utils/ApiMessage'
 import { FindUserById } from '../utils/helper/asyncHelpers'
-import projectModel from '../model/user/projectModel'
+import projectModel from '../model/Projecs and tasks/projectModel'
 
 export const CreateProject = async (input: CreateProjectDTO, userId: string): Promise<ApiMessage> => {
     const { name, description, projectType, logo, teamMembers, status, priority, attachments } = input
