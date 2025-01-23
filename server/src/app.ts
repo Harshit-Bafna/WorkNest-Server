@@ -15,6 +15,7 @@ import awsRouter from './router/s3FileHandler'
 import authRouter from './router/auth'
 import organisationRouter from './router/organisation'
 import projectRouter from './router/projects'
+import userRouter from './router/user'
 
 const app: Application = express()
 
@@ -34,11 +35,13 @@ app.use(express.static(path.join(__dirname, '../', 'public')))
 // Open Routes
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/organisation', organisationRouter)
+
 // Restricted Routes
 app.use(authentication)
 app.use('/api/v1/health', healthRouter)
 app.use('/api/v1/s3', awsRouter)
 app.use('/api/v1/project', projectRouter)
+app.use('/api/v1/user', userRouter)
 
 // 404 hander
 app.use((req: Request, _: Response, next: NextFunction) => {

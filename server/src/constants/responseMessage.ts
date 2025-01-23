@@ -32,5 +32,6 @@ export default {
     OLD_NEW_PASSWORD_SAME: 'New password does not match with new password',
     PASSWORD_CHANGED: 'Password changed successfully',
     ALREADY_IN_USE: (entity: string) => `${entity} already in use`,
-    ERROR_CREATION: (entity: string) => `Error while creating ${entity}`
+    ERROR_CREATION: (entity: string) => `Error while creating ${entity}`,
+    INVALID_VALUE: (entity: string) => `Invalid value of ${entity}`
 }
