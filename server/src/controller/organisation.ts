@@ -6,10 +6,10 @@ import responseMessage from '../constants/responseMessage'
 import { emailVerificationTemplate } from '../constants/template/emailVerificationTemplate'
 import userModel from '../model/user/userModel'
 import { sendEmail } from '../service/nodemailerService'
-import { IOrganisation, IUser } from '../types/userTypes'
+import { IDecryptedJwt, IOrganisation, IUser } from '../types/userTypes'
 import { ApiMessage } from '../utils/ApiMessage'
 import { EncryptPassword, FindOrganisationByEmail, FindUserByEmail, VerifyPassword } from '../utils/helper/asyncHelpers'
-import { GenerateRandomId, GenerateOTP, GeneratePassword } from '../utils/helper/syncHelpers'
+import { GenerateRandomId, GenerateOTP, GeneratePassword, VerifyToken } from '../utils/helper/syncHelpers'
 import organisationModel from '../model/user/organisationModel'
 import { organisationRegistrationConfirmationTemplate } from '../constants/template/organisationRegistrationSuccesTemplate'
 import { RegisterOrganisationEmployeeDTO } from '../constants/DTO/Organisation/RegisterOrganisationEmployeeDTO'
@@ -190,10 +190,12 @@ export const AddEmployeeInOrganization = async (input: RegisterOrganisationEmplo
 export const ValidateInvitation = async (input: AcceptInvitationDTO, token: string, code: string): Promise<ApiMessage> => {
     const { oldPassword, newPassword, confirmPassword } = input
     try {
-        const user = await userModel.findOne({
-            'accountConfirmation.token': token,
-            'accountConfirmation.code': code
-        }).select('+password')
+        const user = await userModel
+            .findOne({
+                'accountConfirmation.token': token,
+                'accountConfirmation.code': code
+            })
+            .select('+password')
         if (!user) {
             return {
                 success: false,
@@ -209,7 +211,7 @@ export const ValidateInvitation = async (input: AcceptInvitationDTO, token: stri
                 data: null
             }
         }
-        
+
         const isPasswordMatching = await VerifyPassword(oldPassword, user.password)
         if (!isPasswordMatching) {
             return {
@@ -259,7 +261,150 @@ export const ValidateInvitation = async (input: AcceptInvitationDTO, token: stri
             message: responseMessage.PASSWORD_CHANGED,
             data: null
         }
-    } catch (error) {        
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const GetAllOrganizations = async (accessToken: string, page: number, limit: number, search: string | null): Promise<ApiMessage> => {
+    const skip = (page - 1) * limit
+    try {
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        const roleBasedQueries: Record<string, object> = {
+            [EUserRole.MASTER_ADMIN]: {},
+            [EUserRole.ADMIN]: {}
+        }
+
+        const query = roleBasedQueries[user.role] || null
+        if (!query) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        if (search) {
+            const searchQuery = {
+                $or: [{ name: { $regex: search, $options: 'i' } }, { emailAddress: { $regex: search, $options: 'i' } }]
+            }
+            Object.assign(query, searchQuery)
+        }
+
+        const totalCount = await organisationModel.countDocuments(query)
+        const organizations = await organisationModel
+            .find(query, 'name emailAddress logo website registrationNumber consent adminId createdAt')
+            .populate('adminId', 'name')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.SUCCESS,
+            data: {
+                organizations: organizations,
+                totalCount: totalCount,
+                page: page,
+                limit: limit
+            }
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const GetOrganizationDetails = async (accessToken: string, organizationId: string): Promise<ApiMessage> => {
+    try {
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        } else if (!user.organisation.isAssociated) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        } else if (user.organisation.organisationId !== (organizationId as unknown)) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        } else if (user.role === EUserRole.USER) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        const organization = await organisationModel.findById(organizationId)
+        if (!organization) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Organization'),
+                data: null
+            }
+        }
+
+        const organizationAdmin = await userModel.findOne({
+            'organisation.organisationId': organizationId,
+            role: EUserRole.ORGANISATION_ADMIN
+        })
+        if (!organizationAdmin) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Organization admin'),
+                data: null
+            }
+        }
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.SUCCESS,
+            data: {
+                organization: organization,
+                organizationAdmin: organizationAdmin
+            }
+        }
+    } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
         return {
             success: false,
