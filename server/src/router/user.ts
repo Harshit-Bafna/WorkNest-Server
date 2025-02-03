@@ -24,20 +24,20 @@ router.get('/allUsers', rateLimit, async (req: Request, res: Response, next: Nex
             return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
         }
         const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
-        
+
         const page: number = req.query.page ? Number(req.query.page as unknown) : 1
-        if(page <= 0) {
+        if (page <= 0) {
             return ApiError(next, null, req, 400, responseMessage.INVALID_VALUE('page number'))
         }
-        
+
         const limit: number = Number(req.query.limit as unknown) | 10
-        if(limit <= 0) {
+        if (limit <= 0) {
             return ApiError(next, null, req, 400, responseMessage.INVALID_VALUE('page limit'))
         }
 
         const search: string = req.query.search as string
 
-        const {success, status, message, data} = await GetAllUser(userId, page, limit, search)
+        const { success, status, message, data } = await GetAllUser(userId, page, limit, search)
         if (!success) {
             return ApiError(next, null, req, status, message)
         }
@@ -65,7 +65,7 @@ router.get('/userDetails', rateLimit, async (req: Request, res: Response, next: 
 
         const queryUserId: string = req.query.userId as string
 
-        const {success, status, message, data} = await GetUserDetails(queryUserId, userId)
+        const { success, status, message, data } = await GetUserDetails(queryUserId, userId)
         if (!success) {
             return ApiError(next, null, req, status, message)
         }
