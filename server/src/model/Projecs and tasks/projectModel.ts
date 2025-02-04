@@ -46,19 +46,7 @@ const projectSchema = new mongoose.Schema<IProject>(
             ref: 'user',
             required: true
         },
-        teamMembers: [{
-            _id: false,
-            memberId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'user',
-                required: true
-            },
-            role: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'user',
-                required: true
-            }
-        }],
+        teamMembers: [mongoose.Schema.Types.ObjectId],
         status: {
             type: String,
             enum: Object.values(EProjectStatus),

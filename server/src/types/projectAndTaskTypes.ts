@@ -1,11 +1,6 @@
 import { EProjectPriority, EProjectStatus, EProjectTypes, ETaskPriority } from '../constants/Enums/projectAndTaskEnums'
 import mongoose from 'mongoose'
 
-export interface IProjectTeamMembers {
-    memberId: mongoose.Schema.Types.ObjectId
-    role: string
-}
-
 export interface IProject {
     name: string
     description: string | null
@@ -19,7 +14,7 @@ export interface IProject {
         managerId: mongoose.Schema.Types.ObjectId
     }
     logo: string | null
-    teamMembers: IProjectTeamMembers[]
+    teamMembers: mongoose.Schema.Types.ObjectId[]
     status: EProjectStatus
     priority: EProjectPriority
     startDate: Date

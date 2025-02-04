@@ -22,16 +22,6 @@ export class ProjectDetailsDTO {
     managerId!: string
 }
 
-export class TeamMemberDTO {
-    @IsNotEmpty({ message: 'Member ID is required' })
-    @IsString({ message: 'Member ID must be a string' })
-    memberId!: string
-
-    @IsNotEmpty({ message: 'Role ID is required' })
-    @IsString({ message: 'Role ID must be a string' })
-    role!: string
-}
-
 export class AttachmentsDTO {
     @IsOptional()
     @IsArray({ message: 'URLs must be an array of strings' })
@@ -64,9 +54,9 @@ export class CreateProjectDTO {
     logo?: string | null
 
     @IsOptional()
-    @IsArray({ message: 'Team members must be an array' })
-    @ValidateNested({ each: true })
-    teamMembers?: TeamMemberDTO[]
+    @IsArray({ message: 'Team members IDs must be an array of strings' })
+    @IsString({ each: true, message: 'Each member ID must be a string' })
+    teamMemberIds?: string[]
 
     @IsString({ message: 'Status must be a string' })
     @IsEnum(EProjectStatus, { message: 'Invalid project status' })
@@ -79,5 +69,5 @@ export class CreateProjectDTO {
     priority!: EProjectPriority
 
     @ValidateNested()
-    attachments!: AttachmentsDTO
+    attachments?: AttachmentsDTO
 }

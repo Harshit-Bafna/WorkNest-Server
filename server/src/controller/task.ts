@@ -32,7 +32,7 @@ export const CreateNewTaskStatus = async (input: CreateTaskStatusDTO, userId: st
                 }
             }
         } else {
-            const isMember = project.teamMembers.some((member) => member.memberId === (userId as unknown))
+            const isMember = project.teamMembers.some((memberId) => memberId === (userId as unknown))
 
             if (!isMember || project.projectDetails.managerId !== (userId as unknown) || project.ownerId !== (userId as unknown)) {
                 return {
@@ -106,7 +106,7 @@ export const CreateTask = async (input: CreateTaskDTO, userId: string): Promise<
                 }
             }
         } else {
-            const isMember = project.teamMembers.some((member) => member.memberId === (userId as unknown))
+            const isMember = project.teamMembers.some((memberId) => memberId === (userId as unknown))
 
             if (!isMember || project.projectDetails.managerId !== (userId as unknown) || project.ownerId !== (userId as unknown)) {
                 return {
