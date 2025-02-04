@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
-import { IProject } from '../../types/projectTypes'
-import { EProjectPriority, EProjectStatus, EProjectTypes } from '../../constants/Enums/projectEnums'
+import { IProject } from '../../types/projectAndTaskTypes'
+import { EProjectPriority, EProjectStatus, EProjectTypes } from '../../constants/Enums/projectAndTaskEnums'
 
 const projectSchema = new mongoose.Schema<IProject>(
     {

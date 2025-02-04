@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import { CreateProjectDTO } from '../constants/DTO/Project and Task/CreateProjectDTO'
 import responseMessage from '../constants/responseMessage'
-import { IProject, IProjectTeamMembers } from '../types/projectTypes'
+import { IProject, IProjectTeamMembers } from '../types/projectAndTaskTypes'
 import { ApiMessage } from '../utils/ApiMessage'
 import { FindUserById } from '../utils/helper/asyncHelpers'
 import projectModel from '../model/Projecs and tasks/projectModel'

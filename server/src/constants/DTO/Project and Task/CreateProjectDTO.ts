@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, IsOptional, IsEnum, IsArray, ValidateNested } from 'class-validator'
-import { EProjectPriority, EProjectStatus, EProjectTypes } from '../../Enums/projectEnums'
+import { EProjectPriority, EProjectStatus, EProjectTypes } from '../../Enums/projectAndTaskEnums'
 
 export class ProjectTypeDTO {
     @IsString({ message: 'Project type must be a string' })

@@ -22,3 +22,10 @@ export enum EProjectPriority {
     HIGH = 'High',
     CRITICAL = 'Critical'
 }
+
+export enum ETaskPriority {
+    LOW = 'Low',
+    MEDIUM = 'Medium',
+    HIGH = 'High',
+    CRITICAL = 'Critical'
+}
