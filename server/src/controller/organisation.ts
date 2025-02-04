@@ -111,6 +111,21 @@ export const RegisterOrganisation = async (organisationDetails: RegisterOrganisa
 
 export const AddEmployeeInOrganization = async (input: RegisterOrganisationEmployeeDTO): Promise<ApiMessage> => {
     const { organizationId, name, emailAddress } = input
+    let role = input.role
+
+    if (role) {
+        if (role !== EUserRole.ORGANISATION_USER && role !== EUserRole.ORGANISATION_MANAGER) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.INVALID_REQUEST,
+                data: null
+            }
+        }
+    } else {
+        role = EUserRole.ORGANISATION_USER
+    }
+
     try {
         const organisation = await organisationModel.findById(organizationId)
         if (!organisation) {
@@ -133,7 +148,7 @@ export const AddEmployeeInOrganization = async (input: RegisterOrganisationEmplo
             organisation: {
                 isAssociated: true,
                 organisationId: organisation.id as mongoose.Schema.Types.ObjectId,
-                role: EUserRole.USER
+                role: role
             },
             accountConfirmation: {
                 status: false,

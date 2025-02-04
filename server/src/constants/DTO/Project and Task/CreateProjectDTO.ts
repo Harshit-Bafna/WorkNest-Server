@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsEnum, IsArray, ValidateNested } from 'class-validator'
+import { IsNotEmpty, IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsBoolean, IsEmpty } from 'class-validator'
 import { EProjectPriority, EProjectStatus, EProjectTypes } from '../../Enums/projectAndTaskEnums'
 
 export class ProjectTypeDTO {
@@ -10,6 +10,16 @@ export class ProjectTypeDTO {
     @IsOptional()
     @IsString({ message: 'Other type must be a string' })
     otherType?: string | null
+}
+
+export class ProjectDetailsDTO {
+    @IsBoolean({ message: 'Project restriction must be either true or false' })
+    @IsEmpty({ message: 'Project restriction is required' })
+    restricted!: boolean
+
+    @IsNotEmpty({ message: 'Manager ID is required' })
+    @IsString({ message: 'Manager ID must be a string' })
+    managerId!: string
 }
 
 export class TeamMemberDTO {
@@ -45,6 +55,9 @@ export class CreateProjectDTO {
 
     @ValidateNested()
     projectType!: ProjectTypeDTO
+
+    @ValidateNested()
+    projectDetails!: ProjectDetailsDTO
 
     @IsOptional()
     @IsString({ message: 'Logo must be a string' })

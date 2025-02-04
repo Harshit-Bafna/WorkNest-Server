@@ -22,13 +22,20 @@ const router = Router()
 */
 router.post('/status/create', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { cookies } = req
+        const { accessToken } = cookies as { accessToken: string | undefined }
+        if (!accessToken) {
+            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
+        }
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+
         const body: object = req.body as object
         const requestValidation = await validateDTO(CreateTaskStatusDTO, body)
         if (!requestValidation.success) {
             return DtoError(next, req, requestValidation.status, requestValidation.errors)
         }
 
-        const { success, status, message, data } = await CreateNewTaskStatus(req.body as CreateTaskStatusDTO)
+        const { success, status, message, data } = await CreateNewTaskStatus(req.body as CreateTaskStatusDTO, userId)
         if (!success) {
             return ApiError(next, null, req, status, message)
         }

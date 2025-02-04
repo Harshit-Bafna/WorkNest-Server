@@ -7,7 +7,7 @@ import { FindUserById } from '../utils/helper/asyncHelpers'
 import projectModel from '../model/Projecs and tasks/projectModel'
 
 export const CreateProject = async (input: CreateProjectDTO, userId: string): Promise<ApiMessage> => {
-    const { name, description, projectType, logo, teamMembers, status, priority, attachments } = input
+    const { name, description, projectType, logo, teamMembers, status, priority, attachments, projectDetails } = input
 
     try {
         const owner = await FindUserById(userId)
@@ -55,6 +55,10 @@ export const CreateProject = async (input: CreateProjectDTO, userId: string): Pr
             projectType: {
                 pType: projectType.pType,
                 otherType: projectType.otherType ?? null
+            },
+            projectDetails: {
+                restricted: projectDetails.restricted,
+                managerId: projectDetails.managerId as unknown as mongoose.Schema.Types.ObjectId
             },
             logo: logo ?? null,
             ownerId: owner.id as mongoose.Schema.Types.ObjectId,

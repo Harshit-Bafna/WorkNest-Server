@@ -24,6 +24,19 @@ const projectSchema = new mongoose.Schema<IProject>(
                 required: false
             }
         },
+        projectDetails: {
+            _id: false,
+            restricted: {
+                type: Boolean,
+                default: true,
+                required: true
+            },
+            managerId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'user',
+                required: true
+            }
+        },
         logo: {
             type: String,
             required: false

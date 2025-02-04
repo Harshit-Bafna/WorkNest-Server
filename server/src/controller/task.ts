@@ -7,10 +7,43 @@ import { ITask, ITaskStatus } from '../types/projectAndTaskTypes'
 import mongoose from 'mongoose'
 import { ApiMessage } from '../utils/ApiMessage'
 import responseMessage from '../constants/responseMessage'
+import projectModel from '../model/Projecs and tasks/projectModel'
 
-export const CreateNewTaskStatus = async (input: CreateTaskStatusDTO): Promise<ApiMessage> => {
+export const CreateNewTaskStatus = async (input: CreateTaskStatusDTO, userId: string): Promise<ApiMessage> => {
     const { projectId, statusDetails } = input
     try {
+        const project = await projectModel.findById(projectId)
+        if (!project) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Project'),
+                data: null
+            }
+        }
+
+        if (project.projectDetails.restricted) {
+            if (project.projectDetails.managerId !== (userId as unknown) || project.ownerId !== (userId as unknown)) {
+                return {
+                    success: false,
+                    status: 404,
+                    message: responseMessage.UNAUTHORIZED,
+                    data: null
+                }
+            }
+        } else {
+            const isMember = project.teamMembers.some((member) => member.memberId === (userId as unknown))
+
+            if (!isMember || project.projectDetails.managerId !== (userId as unknown) || project.ownerId !== (userId as unknown)) {
+                return {
+                    success: false,
+                    status: 404,
+                    message: responseMessage.UNAUTHORIZED,
+                    data: null
+                }
+            }
+        }
+
         const payload: ITaskStatus = {
             projectId: projectId as unknown as mongoose.Schema.Types.ObjectId,
             statusDetails: {
@@ -50,6 +83,38 @@ export const CreateTask = async (input: CreateTaskDTO, userId: string): Promise<
                 status: 401,
                 message: responseMessage.UNAUTHORIZED,
                 data: null
+            }
+        }
+
+        const project = await projectModel.findById(projectId)
+        if (!project) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Project'),
+                data: null
+            }
+        }
+
+        if (project.projectDetails.restricted) {
+            if (project.projectDetails.managerId !== (userId as unknown) || project.ownerId !== (userId as unknown)) {
+                return {
+                    success: false,
+                    status: 404,
+                    message: responseMessage.UNAUTHORIZED,
+                    data: null
+                }
+            }
+        } else {
+            const isMember = project.teamMembers.some((member) => member.memberId === (userId as unknown))
+
+            if (!isMember || project.projectDetails.managerId !== (userId as unknown) || project.ownerId !== (userId as unknown)) {
+                return {
+                    success: false,
+                    status: 404,
+                    message: responseMessage.UNAUTHORIZED,
+                    data: null
+                }
             }
         }
 
