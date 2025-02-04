@@ -13,6 +13,7 @@ const projectSchema = new mongoose.Schema<IProject>(
             required: false
         },
         projectType: {
+            _id: false,
             pType: {
                 type: String,
                 enum: Object.values(EProjectTypes),
@@ -33,6 +34,7 @@ const projectSchema = new mongoose.Schema<IProject>(
             required: true
         },
         teamMembers: [{
+            _id: false,
             memberId: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'user',
@@ -68,6 +70,7 @@ const projectSchema = new mongoose.Schema<IProject>(
             required: true
         },
         attachments: {
+            _id: false,
             urls: {
                 type: [String],
                 required: false
