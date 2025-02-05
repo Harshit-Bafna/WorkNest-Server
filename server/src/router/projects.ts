@@ -5,7 +5,7 @@ import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
 import rateLimit from '../middleware/rateLimit'
 import { CreateProjectDTO } from '../constants/DTO/Project and Task/CreateProjectDTO'
-import { CreateProject } from '../controller/projects'
+import { CreateProject, GetAllProjects, GetProjectDetails } from '../controller/projects'
 import responseMessage from '../constants/responseMessage'
 import { VerifyToken } from '../utils/helper/syncHelpers'
 import config from '../config/config'
@@ -39,6 +39,70 @@ router.post('/create', rateLimit, async (req: Request, res: Response, next: Next
             return ApiError(next, null, req, createProject.status, createProject.message)
         }
         return ApiResponse(req, res, createProject.status, createProject.message, createProject.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/project/getAll
+    Method: GET
+    Desc: Get all project
+    Access: Protected
+*/
+router.get('/getAll', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { cookies } = req
+        const { accessToken } = cookies as { accessToken: string | undefined }
+        if (!accessToken) {
+            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
+        }
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+
+        const page: number = req.query.page ? Number(req.query.page as unknown) : 1
+        if (page <= 0) {
+            return ApiError(next, null, req, 400, responseMessage.INVALID_VALUE('page number'))
+        }
+
+        const limit: number = Number(req.query.limit as unknown) | 10
+        if (limit <= 0) {
+            return ApiError(next, null, req, 400, responseMessage.INVALID_VALUE('page limit'))
+        }
+
+        const search: string = req.query.search as string
+
+        const { success, status, message, data } = await GetAllProjects(userId, page, limit, search)
+        if (!success) {
+            return ApiError(next, null, req, status, message)
+        }
+        return ApiResponse(req, res, status, message, data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/project/get/:projectId
+    Method: GET
+    Desc:  project
+    Access: Protected
+*/
+router.get('/get/:projectId', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { cookies } = req
+        const { accessToken } = cookies as { accessToken: string | undefined }
+        if (!accessToken) {
+            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
+        }
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+
+        const projectId: string = req.params.projectId
+        
+        const { success, status, message, data } = await GetProjectDetails(projectId, userId)
+        if (!success) {
+            return ApiError(next, null, req, status, message)
+        }
+        return ApiResponse(req, res, status, message, data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }

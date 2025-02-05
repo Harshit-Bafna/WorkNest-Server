@@ -6,6 +6,7 @@ import { ApiMessage } from '../utils/ApiMessage'
 import projectModel from '../model/Projecs and tasks/projectModel'
 import userModel from '../model/user/userModel'
 import { EUserRole } from '../constants/Enums/applicationEnums'
+import { EProjectTypes } from '../constants/Enums/projectAndTaskEnums'
 
 export const CreateProject = async (input: CreateProjectDTO, userId: string): Promise<ApiMessage> => {
     const { name, description, projectType, logo, teamMemberIds, status, priority, attachments, projectDetails } = input
@@ -80,7 +81,7 @@ export const CreateProject = async (input: CreateProjectDTO, userId: string): Pr
                                 data: null
                             }
                         }
-    
+
                         if (
                             !(isMember.organisation.organisationId instanceof mongoose.Types.ObjectId) ||
                             !(owner.organisation.organisationId instanceof mongoose.Types.ObjectId) ||
@@ -93,12 +94,12 @@ export const CreateProject = async (input: CreateProjectDTO, userId: string): Pr
                                 data: null
                             }
                         }
-    
+
                         teamMembers.push(memberId as unknown as mongoose.Schema.Types.ObjectId)
                         return null
                     })
                 )
-    
+
                 const failedMember = memberResults.find((result) => result !== null)
                 if (failedMember) {
                     return failedMember
@@ -154,4 +155,203 @@ export const CreateProject = async (input: CreateProjectDTO, userId: string): Pr
     }
 }
 
+export const GetAllProjects = async (userId: string, page: number, limit: number, search: string | null): Promise<ApiMessage> => {
+    const skip = (page - 1) * limit
+    try {
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
 
+        const roleBasedQueries: Record<string, object> = {
+            [EUserRole.ORGANISATION_ADMIN]: { ownerId: userId },
+            [EUserRole.USER]: { ownerId: userId },
+            [EUserRole.ORGANISATION_MANAGER]: { 'projectDetails.managerId': userId },
+            [EUserRole.ORGANISATION_USER]: { teamMembers: userId }
+        }
+
+        const query = roleBasedQueries[user.role] || null
+        if (!query) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        if (search) {
+            Object.assign(query, {
+                $or: [{ name: { $regex: search, $options: 'i' } }, { emailAddress: { $regex: search, $options: 'i' } }]
+            })
+        }
+
+        const projects = await projectModel
+            .find(query)
+            .select('name projectType projectDetails logo ownerId teamMembers status priority startDate endDate progress')
+            .lean()
+            .skip(skip)
+            .limit(limit)
+
+        const totalCount = await projectModel.countDocuments(query)
+
+        const responsePayload = projects.map((project) => ({
+            projectName: project.name,
+            projectType: project.projectType.pType === EProjectTypes.OTHER ? project.projectType.otherType : project.projectType.pType,
+            isRestricted: project.projectDetails.restricted,
+            logo: project.logo,
+            status: project.status,
+            priority: project.priority,
+            startDate: project.startDate,
+            endDate: project.endDate,
+            progress: project.progress
+        }))
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.SUCCESS,
+            data: {
+                projects: responsePayload,
+                totalCount: totalCount,
+                page,
+                limit
+            }
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const GetProjectDetails = async (projectId: string, userId: string): Promise<ApiMessage> => {
+    try {
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        const project = await projectModel
+            .findById(projectId)
+            .select('name projectType projectDetails ownerId teamMembers logo status priority startDate endDate progress')
+
+        if (!project) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Project'),
+                data: null
+            }
+        }        
+
+        if (
+            user.id != project.ownerId &&
+            user.id != project.projectDetails.managerId &&
+            !project.teamMembers.includes(user.id as unknown as mongoose.Schema.Types.ObjectId)
+        ) {
+            return {
+            success: false,
+            status: 401,
+            message: responseMessage.UNAUTHORIZED + 'jkhga' ,
+            data: null
+            }
+        }
+
+        const owner = await userModel.findById(project.ownerId).select('id name emailAddress organisation')
+        if (!owner) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Project owner'),
+                data: null
+            }
+        }
+
+        let response = null
+        let manager = null
+        let teamMembers = null
+
+        if (owner.organisation.isAssociated) {
+            manager = await userModel.findById(project.projectDetails.managerId).select('id name emailAddress')
+            if (!manager) {
+                return {
+                    success: false,
+                    status: 404,
+                    message: responseMessage.NOT_FOUND('Project manager'),
+                    data: null
+                }
+            }
+
+            if (project.teamMembers) {
+                teamMembers = await userModel
+                    .find({
+                        _id: { $in: project.teamMembers }
+                    })
+                    .limit(3)
+                    .select('id name emailAddress')
+            }
+        }
+
+        const projectDetail = {
+            projectName: project.name,
+            projectType: project.projectType.pType === EProjectTypes.OTHER ? project.projectType.otherType : project.projectType.pType,
+            isRestricted: project.projectDetails.restricted,
+            logo: project.logo,
+            status: project.status,
+            priority: project.priority,
+            startDate: project.startDate,
+            endDate: project.endDate,
+            progress: project.progress
+        }
+
+        if (manager && teamMembers) {
+            response = {
+                projectDetail: projectDetail,
+                owner: owner,
+                manager: manager,
+                teamMembers: teamMembers
+            }
+        } else if (manager && !teamMembers) {
+            response = {
+                projectDetail: projectDetail,
+                owner: owner,
+                manager: manager
+            }
+        } else {
+            response = {
+                projectDetail: projectDetail,
+                owner: owner
+            }
+        }
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.SUCCESS,
+            data: response
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
