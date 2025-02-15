@@ -58,7 +58,7 @@ router.get('/getSignedUrl/', async (req: Request, res: Response, next: NextFunct
     Access: Protected
     Query: key
 */
-router.delete('/deleteFile/', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/deleteFile', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const key = req.query.key as string
         const deleteData = await deleteFilefromAWS(key)

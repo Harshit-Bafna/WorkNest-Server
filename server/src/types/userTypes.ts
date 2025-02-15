@@ -7,12 +7,12 @@ export interface IUser {
     name: string
     emailAddress: string
     password: string
-    role: EUserRole,
+    role: EUserRole
     organisation: {
         isAssociated: boolean
         organisationId: mongoose.Schema.Types.ObjectId | null
         role: string | null
-    },
+    }
     accountConfirmation: {
         status: boolean
         token: string

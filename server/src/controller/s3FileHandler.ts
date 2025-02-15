@@ -54,12 +54,14 @@ export const uploadToAWS = async (input: UploadParams): Promise<ApiMessage> => {
         await S3.send(uploadCommand)
 
         const fileUrl = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${folderName}/${fileName}`
+        const key = `/${folderName}/${fileName}`
         return {
             success: true,
             status: 200,
             message: 'File uploaded successfully',
             data: {
-                fileUrl
+                fileUrl,
+                key
             }
         }
     } catch (error) {

@@ -5,11 +5,12 @@ import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
 import rateLimit from '../middleware/rateLimit'
 import { CreateProjectDTO } from '../constants/DTO/Project and Task/CreateProjectDTO'
-import { CreateProject, GetAllProjects, GetProjectDetails } from '../controller/projects'
+import { AddMembersInProject, CreateProject, GetAllProjects, GetProjectDetails } from '../controller/projects'
 import responseMessage from '../constants/responseMessage'
 import { VerifyToken } from '../utils/helper/syncHelpers'
 import config from '../config/config'
 import { IDecryptedJwt } from '../types/userTypes'
+import { ProjectMemberManagementDTO } from '../constants/DTO/Project and Task/ProjectMemberManagementDTO'
 const router = Router()
 
 /*
@@ -84,7 +85,7 @@ router.get('/getAll', rateLimit, async (req: Request, res: Response, next: NextF
 /*
     Route: /api/v1/project/get/:projectId
     Method: GET
-    Desc:  project
+    Desc:  Get project details
     Access: Protected
 */
 router.get('/get/:projectId', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
@@ -99,6 +100,70 @@ router.get('/get/:projectId', rateLimit, async (req: Request, res: Response, nex
         const projectId: string = req.params.projectId
         
         const { success, status, message, data } = await GetProjectDetails(projectId, userId)
+        if (!success) {
+            return ApiError(next, null, req, status, message)
+        }
+        return ApiResponse(req, res, status, message, data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/project/addMembers
+    Method: PUT
+    Desc:  Add members in project
+    Access: Protected
+    Body: ProjectMemberManagementDTO
+*/
+router.put('/addMembers', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { cookies } = req
+        const { accessToken } = cookies as { accessToken: string | undefined }
+        if (!accessToken) {
+            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
+        }
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+
+        const body: object = req.body as object
+        const requestValidation = await validateDTO(ProjectMemberManagementDTO, body)
+        if (!requestValidation.success) {
+            return DtoError(next, req, requestValidation.status, requestValidation.errors)
+        }
+        
+        const { success, status, message, data } = await AddMembersInProject(req.body as ProjectMemberManagementDTO, userId)
+        if (!success) {
+            return ApiError(next, null, req, status, message)
+        }
+        return ApiResponse(req, res, status, message, data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/project/removeMembers
+    Method: PUT
+    Desc:  Remove members from project
+    Access: Protected
+    Body: ProjectMemberManagementDTO
+*/
+router.put('/removeMembers', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { cookies } = req
+        const { accessToken } = cookies as { accessToken: string | undefined }
+        if (!accessToken) {
+            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
+        }
+        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
+
+        const body: object = req.body as object
+        const requestValidation = await validateDTO(ProjectMemberManagementDTO, body)
+        if (!requestValidation.success) {
+            return DtoError(next, req, requestValidation.status, requestValidation.errors)
+        }
+        
+        const { success, status, message, data } = await AddMembersInProject(req.body as ProjectMemberManagementDTO, userId)
         if (!success) {
             return ApiError(next, null, req, status, message)
         }

@@ -7,6 +7,7 @@ import projectModel from '../model/Projecs and tasks/projectModel'
 import userModel from '../model/user/userModel'
 import { EUserRole } from '../constants/Enums/applicationEnums'
 import { EProjectTypes } from '../constants/Enums/projectAndTaskEnums'
+import { ProjectMemberManagementDTO } from '../constants/DTO/Project and Task/ProjectMemberManagementDTO'
 
 export const CreateProject = async (input: CreateProjectDTO, userId: string): Promise<ApiMessage> => {
     const { name, description, projectType, logo, teamMemberIds, status, priority, attachments, projectDetails } = input
@@ -257,7 +258,7 @@ export const GetProjectDetails = async (projectId: string, userId: string): Prom
                 message: responseMessage.NOT_FOUND('Project'),
                 data: null
             }
-        }        
+        }
 
         if (
             user.id != project.ownerId &&
@@ -265,10 +266,10 @@ export const GetProjectDetails = async (projectId: string, userId: string): Prom
             !project.teamMembers.includes(user.id as unknown as mongoose.Schema.Types.ObjectId)
         ) {
             return {
-            success: false,
-            status: 401,
-            message: responseMessage.UNAUTHORIZED + 'jkhga' ,
-            data: null
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
             }
         }
 
@@ -344,6 +345,187 @@ export const GetProjectDetails = async (projectId: string, userId: string): Prom
             status: 200,
             message: responseMessage.SUCCESS,
             data: response
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const AddMembersInProject = async (input: ProjectMemberManagementDTO, userId: string): Promise<ApiMessage> => {
+    const { projectId, teamMemberIds } = input
+
+    try {
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        if (!user.organisation.isAssociated) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.INVALID_REQUEST,
+                data: null
+            }
+        }
+
+        const project = await projectModel.findById(projectId)
+        if (!project) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Project'),
+                data: null
+            }
+        }
+
+        if (project.ownerId != user.id && project.projectDetails.managerId != user.id) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED + 'dghf',
+                data: null
+            }
+        }
+
+        if (teamMemberIds && teamMemberIds.length > 0) {
+            await Promise.all(
+                teamMemberIds.map(async (memberId) => {
+                    if (project.teamMembers.includes(memberId as unknown as mongoose.Schema.Types.ObjectId)) {
+                        return {
+                            success: false,
+                            status: 401,
+                            message: responseMessage.INVALID_REQUEST,
+                            data: null
+                        }
+                    }
+
+                    const newMember = await userModel.findById(memberId)
+                    if (!newMember) {
+                        return {
+                            success: false,
+                            status: 401,
+                            message: responseMessage.NOT_FOUND('Member'),
+                            data: null
+                        }
+                    }
+
+                    if (!(newMember.role === EUserRole.ORGANISATION_USER)) {
+                        return {
+                            success: false,
+                            status: 401,
+                            message: responseMessage.INVALID_REQUEST,
+                            data: null
+                        }
+                    }
+
+                    return null
+                })
+            )
+        }
+
+        teamMemberIds.map((memberId) => {
+            project.teamMembers.push(memberId as unknown as mongoose.Schema.Types.ObjectId)
+        })
+
+        await project.save()
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.SUCCESS,
+            data: {
+                project: project
+            }
+        }
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
+        return {
+            success: false,
+            status: 500,
+            message: errMessage,
+            data: null
+        }
+    }
+}
+
+export const RemoveMembersFromProject = async (input: ProjectMemberManagementDTO, userId: string): Promise<ApiMessage> => {
+    const { projectId, teamMemberIds } = input
+    try {
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED,
+                data: null
+            }
+        }
+
+        if (!user.organisation.isAssociated) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.INVALID_REQUEST,
+                data: null
+            }
+        }
+
+        const project = await projectModel.findById(projectId)
+        if (!project) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('Project'),
+                data: null
+            }
+        }
+
+        if (project.ownerId != user.id && project.projectDetails.managerId != user.id) {
+            return {
+                success: false,
+                status: 401,
+                message: responseMessage.UNAUTHORIZED + 'dghf',
+                data: null
+            }
+        }
+
+        if (teamMemberIds && teamMemberIds.length > 0) {
+            teamMemberIds.map((memberId) => {
+                if (!project.teamMembers.includes(memberId as unknown as mongoose.Schema.Types.ObjectId)) {
+                    return {
+                        success: false,
+                        status: 401,
+                        message: responseMessage.INVALID_REQUEST,
+                        data: null
+                    }
+                }
+                return null
+            })
+        }
+
+        project.teamMembers = project.teamMembers.filter((memberId) => !teamMemberIds.includes(memberId as unknown as string))
+
+        await project.save()
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.SUCCESS,
+            data: {
+                project: project
+            }
         }
     } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG

@@ -36,11 +36,11 @@ app.use(express.static(path.join(__dirname, '../', 'public')))
 // Open Routes
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/organisation', organisationRouter)
+app.use('/api/v1/s3', awsRouter)
 
 // Restricted Routes
 app.use(authentication)
 app.use('/api/v1/health', healthRouter)
-app.use('/api/v1/s3', awsRouter)
 app.use('/api/v1/project', projectRouter)
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/task', taskRouter)
