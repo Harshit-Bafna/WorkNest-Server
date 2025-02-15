@@ -65,7 +65,7 @@ export const RegisterOrganisation = async (organisationDetails: RegisterOrganisa
 
         const newUser = await userModel.create(userPayload)
 
-        const confirmationUrl = `${config.SERVER_URL}/confirmation/${token}?code=${code}`
+        const confirmationUrl = `${config.CLIENT_URL}/confirmation/${token}?code=${code}`
         const to = [emailAddress]
         const confirmAccountSubject = 'Confirm Your Account'
         const confirmAccountHTML = emailVerificationTemplate(confirmationUrl)
