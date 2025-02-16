@@ -25,17 +25,23 @@ export const RegisterUser = async (input: UserRegistrationDTO): Promise<ApiMessa
 
     try {
         const user = await FindUserByEmail(emailAddress)
+
         if (user) {
-            return {
-                success: false,
-                status: 422,
-                message: responseMessage.ALREADY_EXISTS('User', 'emailAddress'),
-                data: null
+            if (user.accountConfirmation.status) {
+                return {
+                    success: false,
+                    status: 422,
+                    message: responseMessage.ALREADY_EXISTS('User', 'emailAddress'),
+                    data: null
+                }
             }
+
+            await userModel.deleteOne({
+                id: user.id
+            })
         }
 
         const encryptedPassword = await EncryptPassword(password)
-
         const token = GenerateRandomId()
         const code = GenerateOTP(6)
 
@@ -137,6 +143,56 @@ export const VerifyAccount = async (token: string, code: string): Promise<ApiMes
     }
 }
 
+export const ResendVerifyAccount = async (emailAddress: string): Promise<ApiMessage> => {
+    try {
+        const user = await userModel.findOne({
+            emailAddress: emailAddress
+        })
+        if (!user) {
+            return {
+                success: false,
+                status: 404,
+                message: responseMessage.NOT_FOUND('User'),
+                data: null
+            }
+        } else if (user.accountConfirmation.status) {
+            return {
+                success: false,
+                status: 400,
+                message: responseMessage.ACCOUNT_ALREADY_CONFIRMED,
+                data: null
+            }
+        }
+        
+        const token = GenerateRandomId()
+        const code = GenerateOTP(6)
+
+        user.accountConfirmation.token = token
+        user.accountConfirmation.code = code
+        await user.save()
+
+        const confirmationUrl = `${config.CLIENT_URL}/confirmation/${token}?code=${code}`
+        const to = [emailAddress]
+        const subject = 'Confirm Your Account'
+        const HTML = emailVerificationTemplate(confirmationUrl)
+        await sendEmail(to, subject, HTML)
+
+        return {
+            success: true,
+            status: 200,
+            message: responseMessage.SUCCESS,
+            data: null
+        }
+    } catch (error) {
+        return {
+            success: false,
+            status: 500,
+            message: `User registration failed: ${error as string}`,
+            data: null
+        }
+    }
+}
+
 export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
     const { emailAddress, password } = input
     try {
@@ -149,7 +205,7 @@ export const LoginUser = async (input: UserLoginDTO): Promise<ApiMessage> => {
                 data: null
             }
         }
-        if(!user.accountConfirmation.status) {
+        if (!user.accountConfirmation.status) {
             return {
                 success: false,
                 status: 400,
@@ -484,7 +540,6 @@ export const ChangePassword = async (accessToken: string, input: UserChangePassw
             message: responseMessage.PASSWORD_CHANGED,
             data: null
         }
-
     } catch (error) {
         const errMessage = error instanceof Error ? error.message : responseMessage.INTERNAL_SERVER_ERROR
         return {

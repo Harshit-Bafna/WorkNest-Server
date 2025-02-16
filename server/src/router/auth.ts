@@ -1,7 +1,7 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { ChangePassword, ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, ResetPasseord, VerifyAccount } from '../controller/auth'
+import { ChangePassword, ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, ResendVerifyAccount, ResetPasseord, VerifyAccount } from '../controller/auth'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
@@ -113,6 +113,32 @@ router.put('/confirmation/:token', rateLimit, async (req: Request, res: Response
             return ApiError(next, null, req, verifyUser.status, verifyUser.message)
         }
         return ApiResponse(req, res, verifyUser.status, verifyUser.message, verifyUser.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/auth/resend/email-verification
+    Method: POST
+    Desc: Resend user email verification link
+    Access: Public
+    Query: emailAddress
+*/
+router.put('/resend/email-verification', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const emailAddress: string = req.query.emailAddress as string
+
+        if (!emailAddress) {
+            return ApiError(next, 'Email address is required', req, 400)
+        }
+
+        const {success, status, message, data} = await ResendVerifyAccount(emailAddress)
+
+        if (!success) {
+            return ApiError(next, null, req, status, message)
+        }
+        return ApiResponse(req, res, status, message, data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }
