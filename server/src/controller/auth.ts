@@ -36,9 +36,16 @@ export const RegisterUser = async (input: UserRegistrationDTO): Promise<ApiMessa
                 }
             }
 
-            await userModel.deleteOne({
-                id: user.id
-            })
+            const deletionResult = await userModel.deleteOne({ _id: user._id })
+
+            if (deletionResult.deletedCount === 0) {
+                return {
+                    success: false,
+                    status: 500,
+                    message: 'Failed to delete existing unconfirmed user.',
+                    data: null
+                }
+            }
         }
 
         const encryptedPassword = await EncryptPassword(password)
@@ -163,7 +170,7 @@ export const ResendVerifyAccount = async (emailAddress: string): Promise<ApiMess
                 data: null
             }
         }
-        
+
         const token = GenerateRandomId()
         const code = GenerateOTP(6)
 

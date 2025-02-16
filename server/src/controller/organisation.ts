@@ -24,14 +24,32 @@ export const RegisterOrganisation = async (organisationDetails: RegisterOrganisa
     try {
         const admin = await FindUserByEmail(emailAddress)
         const organisation = await FindOrganisationByEmail(emailAddress)
+        
         if (admin || organisation) {
-            return {
-                success: false,
-                status: 422,
-                message: responseMessage.ALREADY_IN_USE('EmailAddress'),
-                data: null
+            if (admin && organisation) {
+                if (admin.accountConfirmation.status) {
+                    return {
+                        success: false,
+                        status: 422,
+                        message: responseMessage.ALREADY_EXISTS('User', 'emailAddress'),
+                        data: null
+                    }
+                }
+    
+                const deleteAdminResult = await userModel.deleteOne({ _id: admin._id })
+                const deleteOrganizationResult = await organisationModel.deleteOne({ _id: organisation._id })
+    
+                if (deleteAdminResult.deletedCount === 0 && deleteOrganizationResult.deletedCount === 0) {
+                    return {
+                        success: false,
+                        status: 500,
+                        message: 'Failed to delete existing unconfirmed organization.',
+                        data: null
+                    }
+                }
             }
         }
+
 
         const encryptedPassword = await EncryptPassword(password)
 
