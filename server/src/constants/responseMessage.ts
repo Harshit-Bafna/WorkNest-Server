@@ -29,7 +29,7 @@ export default {
     PASSWORD_RESET_SUCCESSFULLY: 'Password reset successfully',
     WRONG_OLD_PASSWORD: 'Invalid old password',
     PASSWORD_NOT_MATCH: 'New password and confirm password must match',
-    OLD_NEW_PASSWORD_SAME: 'New password does not match with new password',
+    OLD_NEW_PASSWORD_SAME: 'New password matches with old password',
     PASSWORD_CHANGED: 'Password changed successfully',
     ALREADY_IN_USE: (entity: string) => `${entity} already in use`,
     ERROR_CREATION: (entity: string) => `Error while creating ${entity}`,
