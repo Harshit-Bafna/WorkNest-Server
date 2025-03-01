@@ -1,12 +1,10 @@
-import config from '../config/config'
 import { UserBasicInfoDTO } from '../constants/DTO/User/UserProfile/UserBasicInfoDTO'
 import { EUserRole } from '../constants/Enums/applicationEnums'
 import responseMessage from '../constants/responseMessage'
 import organisationModel from '../model/user/organisationModel'
 import userModel from '../model/user/userModel'
-import { IDecryptedJwt, IUserEducation, IUserProfession } from '../types/userTypes'
+import { IUserEducation, IUserProfession } from '../types/userTypes'
 import { ApiMessage } from '../utils/ApiMessage'
-import { VerifyToken } from '../utils/helper/syncHelpers'
 import userBasicInfoModel from '../model/user/userProfile/userBasicInfoModel'
 import { CreateUserEducationDTO } from '../constants/DTO/User/UserProfile/CreateUserEducationDTO'
 import userEducationModel from '../model/user/userProfile/userEducationModel'
@@ -64,41 +62,6 @@ export const GetAllUser = async (userId: string, page: number, limit: number, se
                 totalCount: totalCount,
                 page: page,
                 limit: limit
-            }
-        }
-    } catch (error) {
-        const errMessage = error instanceof Error ? error.message : responseMessage.SOMETHING_WENT_WRONG
-        return {
-            success: false,
-            status: 500,
-            message: errMessage,
-            data: null
-        }
-    }
-}
-
-export const SelfIdentification = async (accessToken: string): Promise<ApiMessage> => {
-    try {
-        const { userId } = VerifyToken(accessToken, config.ACCESS_TOKEN.SECRET as string) as IDecryptedJwt
-
-        const user = await userModel.findById(userId)
-        if (!user) {
-            return {
-                success: false,
-                status: 400,
-                message: responseMessage.INVALID_TOKEN,
-                data: null
-            }
-        }
-
-        return {
-            success: true,
-            status: 200,
-            message: responseMessage.SUCCESS,
-            data: {
-                userId: user._id,
-                name: user.name,
-                emailAddress: user.emailAddress
             }
         }
     } catch (error) {

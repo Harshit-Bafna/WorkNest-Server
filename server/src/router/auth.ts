@@ -1,7 +1,7 @@
 import ApiError from '../utils/ApiError'
 import ApiResponse from '../utils/ApiResponse'
 import { Router, Request, Response, NextFunction } from 'express'
-import { ChangePassword, ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, ResendVerifyAccount, ResetPasseord, VerifyAccount } from '../controller/auth'
+import { ChangePassword, ForgotPassword, LoginUser, LogoutUser, RefreshToken, RegisterUser, ResendVerifyAccount, ResetPasseord, SelfIdentification, VerifyAccount } from '../controller/auth'
 import { UserRegistrationDTO } from '../constants/DTO/User/UserRegistrationDTO'
 import { validateDTO } from '../utils/validateDto'
 import DtoError from '../utils/DtoError'
@@ -304,6 +304,31 @@ router.put('/change-password', authentication, async (req: Request, res: Respons
         }
 
         return ApiResponse(req, res, passwordChangeDetails.status, passwordChangeDetails.message, passwordChangeDetails.data)
+    } catch (err) {
+        return ApiError(next, err, req, 500)
+    }
+})
+
+/*
+    Route: /api/v1/auth/self-identification
+    Method: GET
+    Desc: Get user identity
+    Access: Protected
+    Query: userId
+*/
+router.get('/self-identification', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { cookies } = req
+        const { accessToken } = cookies as { accessToken: string | undefined }
+        if (!accessToken) {
+            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
+        }
+
+        const { success, status, message, data } = await SelfIdentification(accessToken)
+        if (!success) {
+            return ApiError(next, null, req, status, message)
+        }
+        return ApiResponse(req, res, status, message, data)
     } catch (err) {
         return ApiError(next, err, req, 500)
     }

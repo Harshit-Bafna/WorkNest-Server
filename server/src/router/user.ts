@@ -15,7 +15,6 @@ import {
     GetAllUserEducation,
     GetAllUserProfession,
     GetUserDetails,
-    SelfIdentification,
     UpdateBasicInfo,
     UpdateUserEducation,
     UpdateUserProfession
@@ -56,31 +55,6 @@ router.get('/allUsers', rateLimit, async (req: Request, res: Response, next: Nex
         const search: string = req.query.search as string
 
         const { success, status, message, data } = await GetAllUser(userId, page, limit, search)
-        if (!success) {
-            return ApiError(next, null, req, status, message)
-        }
-        return ApiResponse(req, res, status, message, data)
-    } catch (err) {
-        return ApiError(next, err, req, 500)
-    }
-})
-
-/*
-    Route: /api/v1/user/self-identification
-    Method: GET
-    Desc: Get user identity
-    Access: Protected
-    Query: userId
-*/
-router.get('/self-identification', rateLimit, async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { cookies } = req
-        const { accessToken } = cookies as { accessToken: string | undefined }
-        if (!accessToken) {
-            return ApiError(next, null, req, 400, responseMessage.UNAUTHORIZED)
-        }
-
-        const { success, status, message, data } = await SelfIdentification(accessToken)
         if (!success) {
             return ApiError(next, null, req, status, message)
         }
