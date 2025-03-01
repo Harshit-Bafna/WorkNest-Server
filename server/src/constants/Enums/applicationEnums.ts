@@ -12,3 +12,15 @@ export enum EUserRole {
     ORGANISATION_MANAGER = 'Organisation Manager',
     ORGANISATION_USER = 'Organisation User'
 }
+
+export enum ESocialPlatform {
+    LINKED_IN = 'Linked In',
+    FACEBOOK = 'Facebook',
+    GITHUB = 'Github',
+    Instagram = 'Instagram'
+}
+
+export enum EGradeType {
+    CGPA = 'CGPA',
+    PERCENTAGE = 'Percentage'
+}

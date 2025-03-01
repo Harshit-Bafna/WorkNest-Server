@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import config from '../config/config'
 import { UserChangePasswordDTO } from '../constants/DTO/User/ChangePasswordDTO'
 import { UserResetPasswordDTO } from '../constants/DTO/User/ResetPasswordDTO'
@@ -11,12 +12,13 @@ import { verificationSuccessfullTemplate } from '../constants/template/verificat
 import refreshTokenModel from '../model/user/refreshTokenModel'
 import userModel from '../model/user/userModel'
 import { sendEmail } from '../service/nodemailerService'
-import { IDecryptedJwt, IRefreshToken, IUser } from '../types/userTypes'
+import { IDecryptedJwt, IRefreshToken, IUser, IUserBasicInfo } from '../types/userTypes'
 import { ApiMessage } from '../utils/ApiMessage'
 import { EncryptPassword, FindUserByEmail, VerifyPassword } from '../utils/helper/asyncHelpers'
 import { GenerateJwtToken, GenerateOTP, GenerateRandomId, GenerateResetPasswordExpiry, VerifyToken } from '../utils/helper/syncHelpers'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import userBasicInfoModel from '../model/user/userProfile/userBasicInfoModel'
 
 dayjs.extend(utc)
 
@@ -78,6 +80,13 @@ export const RegisterUser = async (input: UserRegistrationDTO): Promise<ApiMessa
         }
 
         const newUser = await userModel.create(payload)
+
+        const basicInfoPayload: IUserBasicInfo = {
+            userId: newUser.id as unknown as mongoose.Schema.Types.ObjectId,
+            bio: null,
+            socialLinks: []
+        }
+        await userBasicInfoModel.create(basicInfoPayload)
 
         const confirmationUrl = `${config.CLIENT_URL}/confirmation/${token}?code=${code}`
         const to = [emailAddress]

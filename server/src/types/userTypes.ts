@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { EUserRole } from '../constants/Enums/applicationEnums'
+import { EGradeType, ESocialPlatform, EUserRole } from '../constants/Enums/applicationEnums'
 import { JwtPayload } from 'jsonwebtoken'
 import mongoose from 'mongoose'
 
@@ -36,6 +36,38 @@ export interface IOrganisation {
     registrationNumber: string | null
     adminId: mongoose.Schema.Types.ObjectId
     consent: boolean
+}
+
+export interface IUserBasicInfo {
+    userId: mongoose.Schema.Types.ObjectId
+    bio: string | null
+    socialLinks: {
+        platform: ESocialPlatform
+        url: string
+    }[]
+}
+
+export interface IUserEducation {
+    userId: mongoose.Schema.Types.ObjectId
+    institutionName: string
+    degree: string
+    grade: {
+        type: EGradeType,
+        value: number
+    }
+    startDate: Date
+    endDate: Date | null
+    isPresent: boolean
+}
+
+export interface IUserProfession {
+    userId: mongoose.Schema.Types.ObjectId
+    organizationName: string
+    role: string
+    position: string
+    startDate: Date
+    endDate: Date | null
+    isPresent: boolean
 }
 
 export interface IRefreshToken {
