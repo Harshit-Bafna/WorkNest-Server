@@ -33,6 +33,11 @@ app.use(
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '../', 'public')))
 
+// Network route
+app.get('/ping', (res: Response) => {
+    res.status(200).json({ status: 200, success: true, message: 'Server is running!', data: null })
+})
+
 // Open Routes
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/organisation', organisationRouter)
